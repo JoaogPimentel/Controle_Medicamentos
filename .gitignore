@@ -1,1 +1,15 @@
+# Credenciais do banco
+src/main/resources/
+
+# Schema SQL (contém estrutura sensível)
 DB_schema.sql
+
+# Classes compiladas
+out/
+
+# Artefato de build auxiliar
+sources.txt
+
+# Diretório de trabalho do Tomcat embutido
+# Criado automaticamente ao iniciar o servidor; contém JSPs compilados
+tomcat.8080/
