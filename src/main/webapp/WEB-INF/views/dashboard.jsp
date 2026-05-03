@@ -1,7 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="model.UsuarioSessao, model.Alerta, java.util.List" %>
+<%@ page import="model.UsuarioSessao, model.Alerta, model.RolePessoa, java.util.List" %>
 <%
-    /* O DashboardServlet preparou estes atributos antes do forward() */
     UsuarioSessao usuario = (UsuarioSessao) request.getAttribute("usuario");
     @SuppressWarnings("unchecked")
     List<Alerta> alertas  = (List<Alerta>) request.getAttribute("alertas");
@@ -24,6 +23,15 @@
         <a href="${pageContext.request.contextPath}/api/auth/logout" class="btn-sair">Sair</a>
     </nav>
 </header>
+
+<nav class="nav-principal">
+    <a href="${pageContext.request.contextPath}/dashboard" class="nav-link ativo">Dashboard</a>
+    <a href="${pageContext.request.contextPath}/medicamentos.jsp" class="nav-link">Medicamentos</a>
+    <a href="${pageContext.request.contextPath}/catalogo.jsp" class="nav-link">Catálogo</a>
+    <% if (usuario.getPapel() == RolePessoa.CUIDADOR) { %>
+    <a href="${pageContext.request.contextPath}/vinculos.jsp" class="nav-link">Vínculos</a>
+    <% } %>
+</nav>
 
 <main class="conteudo">
 
@@ -50,7 +58,6 @@
 </main>
 
 <script>
-    /* Exemplo de interação dinâmica via DOM: conta alertas e atualiza o título */
     (function () {
         var total = document.querySelectorAll('.alerta-item').length;
         if (total > 0) {
