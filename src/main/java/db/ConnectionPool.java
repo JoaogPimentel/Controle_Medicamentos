@@ -51,10 +51,6 @@ public class ConnectionPool {
         return instancia;
     }
 
-    /**
-     * Retorna uma conexão do pool. Quando o caller chamar conn.close(),
-     * a conexão é devolvida ao pool em vez de ser encerrada de fato.
-     */
     public Connection getConnection() throws SQLException {
         try {
             Connection conn = pool.poll(TIMEOUT_SEGUNDOS, TimeUnit.SECONDS);
@@ -62,7 +58,6 @@ public class ConnectionPool {
                 throw new SQLException("Timeout: nenhuma conexão disponível no pool após "
                         + TIMEOUT_SEGUNDOS + "s.");
             }
-            // Valida a conexão antes de entregar (reconecta se estiver morta)
             if (conn.isClosed() || !conn.isValid(2)) {
                 conn = criarConexaoReal();
             }
@@ -77,11 +72,6 @@ public class ConnectionPool {
         return DriverManager.getConnection(url, user, password);
     }
 
-    /**
-     * Cria um Proxy sobre a conexão real.
-     * Intercepta close() para devolver ao pool; todos os outros
-     * métodos são delegados normalmente à conexão real.
-     */
     private Connection embrulharConexao(Connection real) {
         return (Connection) Proxy.newProxyInstance(
             Connection.class.getClassLoader(),

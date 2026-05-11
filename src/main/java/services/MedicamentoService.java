@@ -87,7 +87,6 @@ public class MedicamentoService {
 
     public Posologia iniciarTratamento(Posologia posologia) throws SQLException {
         posologiaDAO.insert(posologia);
-        // trigger no banco transiciona o status do medicamento para EM_USO automaticamente
         return posologia;
     }
 

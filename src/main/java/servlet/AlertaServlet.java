@@ -52,7 +52,17 @@ public class AlertaServlet extends HttpServlet {
             }
 
             String[] parts = path.split("/");
-            int idAlerta = Integer.parseInt(parts[1]);
+            if (parts.length < 3) {
+                JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST, JsonUtil.error("ID do alerta não informado."));
+                return;
+            }
+            int idAlerta;
+            try {
+                idAlerta = Integer.parseInt(parts[1]);
+            } catch (NumberFormatException e) {
+                JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST, JsonUtil.error("ID inválido."));
+                return;
+            }
             service.marcarLido(idAlerta);
             JsonUtil.send(resp, HttpServletResponse.SC_OK, JsonUtil.success("Alerta marcado como lido."));
         } catch (IllegalArgumentException e) {

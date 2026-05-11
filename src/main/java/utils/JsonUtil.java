@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class JsonUtil {
 
     public static String readBody(HttpServletRequest req) throws IOException {
+        req.setCharacterEncoding("UTF-8");
         StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = req.getReader()) {
             String line;
@@ -79,6 +80,10 @@ public class JsonUtil {
 
     public static String escape(String s) {
         if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }

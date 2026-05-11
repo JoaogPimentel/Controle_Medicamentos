@@ -13,7 +13,6 @@
     <h1>MediControl</h1>
     <p class="subtitulo">Controle de Medicamentos</p>
 
-    <%-- O Controller coloca "erro" nos atributos da requisição quando as credenciais falham --%>
     <%
         String erro = (String) request.getAttribute("erro");
         if (erro != null) {
@@ -21,7 +20,6 @@
         <div class="alerta-erro"><%= erro %></div>
     <% } %>
 
-    <%-- Ação aponta para o próprio Controller de página --%>
     <form id="formLogin" method="post"
           action="${pageContext.request.contextPath}/login"
           novalidate>
@@ -44,7 +42,6 @@
         </div>
 
         <label class="lembrar">
-            <%-- Cookie de "lembrar e-mail" é gravado no servidor se marcado --%>
             <input type="checkbox" name="lembrar"
                    ${ not empty emailPreenchido ? 'checked' : '' }>
             Lembrar meu e-mail
@@ -52,11 +49,13 @@
 
         <button type="submit" class="btn-primario">Entrar</button>
     </form>
+
+    <p style="text-align:center; margin-top:1rem; font-size:.875rem; color:#718096">
+        Não tem conta? <a href="${pageContext.request.contextPath}/cadastro" style="color:#2b6cb0">Criar conta</a>
+    </p>
 </main>
 
 <script>
-    /* Validação JavaScript no front-end — impede envio de dados inválidos
-       antes mesmo de chegar ao servidor (Defense in Depth) */
     document.getElementById('formLogin').addEventListener('submit', function (e) {
         var email = document.getElementById('email').value.trim();
         var senha = document.getElementById('senha').value;

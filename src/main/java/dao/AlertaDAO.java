@@ -48,16 +48,48 @@ public class AlertaDAO {
     }
 
     public List<Alerta> findNaoLidosByPessoa(int id_pessoa) throws SQLException {
-        String sql = "SELECT * FROM alerta WHERE id_pessoa = ? AND lido = FALSE ORDER BY data_geracao DESC";
+        String sql = "SELECT a.*, mc.nome AS nome_medicamento " +
+                     "FROM alerta a " +
+                     "LEFT JOIN medicamento m ON m.id_medicamento = a.id_medicamento " +
+                     "LEFT JOIN medicamento_catalogo mc ON mc.id_catalogo = m.id_catalogo " +
+                     "WHERE a.id_pessoa = ? AND a.lido = FALSE " +
+                     "ORDER BY a.data_geracao DESC";
         List<Alerta> lista = new ArrayList<>();
         try (Connection conn = ConexaoDB.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id_pessoa);
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) lista.add(mapear(rs));
+                while (rs.next()) {
+                    Alerta a = mapear(rs);
+                    a.setNomeMedicamento(rs.getString("nome_medicamento"));
+                    lista.add(a);
+                }
             }
         }
         return lista;
+    }
+
+    public boolean existeAlertaRecente(int id_medicamento, model.TipoAlerta tipo, int ultimas_horas) throws SQLException {
+        String sql = "SELECT 1 FROM alerta WHERE id_medicamento = ? AND tipo = ?::tipo_alerta_enum " +
+                     "AND data_geracao >= NOW() - (? * INTERVAL '1 hour') LIMIT 1";
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id_medicamento);
+            stmt.setString(2, tipo.name());
+            stmt.setInt(3, ultimas_horas);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public void deleteByMedicamento(int id_medicamento) throws SQLException {
+        String sql = "DELETE FROM alerta WHERE id_medicamento = ?";
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id_medicamento);
+            stmt.executeUpdate();
+        }
     }
 
     public List<Alerta> findByPessoa(int id_pessoa) throws SQLException {

@@ -1,5 +1,6 @@
 package dao;
 
+import dao.AlertaDAO;
 import db.ConexaoDB;
 import model.Medicamento;
 import model.StatusMedicamento;
@@ -28,7 +29,16 @@ public class MedicamentoDAO {
         }
     }
 
-    // estoque_atual não é atualizado aqui — é gerenciado pela trigger via MovimentacaoEstoque
+    public void delete(int id) throws SQLException {
+        new AlertaDAO().deleteByMedicamento(id);
+        String sql = "DELETE FROM medicamento WHERE id_medicamento = ?";
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+    }
+
     public void update(Medicamento medicamento) throws SQLException {
         String sql = "UPDATE medicamento SET dosagem = ?, estoque_minimo = ?, data_validade = ?, status = ?::status_medicamento_enum WHERE id_medicamento = ?";
         try (Connection conn = ConexaoDB.getConnection();

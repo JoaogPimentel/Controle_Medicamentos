@@ -17,12 +17,9 @@ import java.util.Set;
 
 public class AuthFilter implements Filter {
 
-    /**
-     * Rotas que não exigem autenticação.
-     * Tudo fora desta lista precisa de sessão válida.
-     */
     private static final Set<String> ROTAS_PUBLICAS = Set.of(
         "/login",
+        "/cadastro",
         "/api/auth/login",
         "/api/auth/cadastrar"
     );
@@ -40,7 +37,6 @@ public class AuthFilter implements Filter {
         String caminho = req.getRequestURI()
                            .substring(req.getContextPath().length());
 
-        // Rotas públicas e arquivos estáticos passam sem verificação
         if (ehPublico(caminho)) {
             aplicarCacheEstatico(caminho, resp);
             chain.doFilter(request, response);
@@ -52,19 +48,16 @@ public class AuthFilter implements Filter {
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
 
-        // Verifica sessão
         HttpSession    sessao  = req.getSession(false);
         UsuarioSessao  usuario = (sessao != null)
-                                 ? (UsuarioSessao) sessao.getAttribute("usuario")
+                                 ? (UsuarioSessao) sessao.getAttribute(servlet.AuthServlet.ATTR_USUARIO)
                                  : null;
 
         if (usuario == null) {
             if (caminho.startsWith("/api/")) {
-                // Cliente de API recebe 401 JSON
                 JsonUtil.send(resp, HttpServletResponse.SC_UNAUTHORIZED,
                     JsonUtil.error("Não autenticado. Faça login em /api/auth/login."));
             } else {
-                // Navegador é redirecionado para a tela de login
                 resp.sendRedirect(req.getContextPath() + "/login");
             }
             return;
@@ -85,7 +78,6 @@ public class AuthFilter implements Filter {
             || caminho.isEmpty();
     }
 
-    /** Arquivos estáticos podem ser cacheados por 1 dia. */
     private void aplicarCacheEstatico(String caminho, HttpServletResponse resp) {
         if (caminho.startsWith("/css/") || caminho.startsWith("/js/") || caminho.startsWith("/img/")) {
             resp.setHeader("Cache-Control", "public, max-age=86400");

@@ -10,18 +10,25 @@ import java.sql.SQLException;
 
 public class RoleDAO {
 
-    /**
-     * Determina o papel do usuário consultando as tabelas existentes.
-     * Cuidador tem precedência caso a pessoa seja os dois.
-     */
     public RolePessoa findRole(int idPessoa) throws SQLException {
-        if (existeEm("cuidador", idPessoa)) return RolePessoa.CUIDADOR;
-        if (existeEm("paciente", idPessoa)) return RolePessoa.PACIENTE;
-        return RolePessoa.PACIENTE; // padrão para novos cadastros
+        if (existeCuidador(idPessoa)) return RolePessoa.CUIDADOR;
+        if (existePaciente(idPessoa)) return RolePessoa.PACIENTE;
+        return RolePessoa.PACIENTE;
     }
 
-    private boolean existeEm(String tabela, int idPessoa) throws SQLException {
-        String sql = "SELECT 1 FROM " + tabela + " WHERE id_pessoa = ?";
+    private boolean existeCuidador(int idPessoa) throws SQLException {
+        String sql = "SELECT 1 FROM cuidador WHERE id_pessoa = ?";
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idPessoa);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    private boolean existePaciente(int idPessoa) throws SQLException {
+        String sql = "SELECT 1 FROM paciente WHERE id_pessoa = ?";
         try (Connection conn = ConexaoDB.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idPessoa);

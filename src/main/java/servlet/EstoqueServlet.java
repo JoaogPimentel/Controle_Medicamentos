@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Medicamento;
 import model.MovimentacaoEstoque;
 import model.TipoMovimentacao;
+import model.UsuarioSessao;
 import utils.JsonUtil;
 
 import java.io.IOException;
@@ -49,16 +50,17 @@ public class EstoqueServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
+            UsuarioSessao usuario = (UsuarioSessao) req.getSession(false).getAttribute(AuthServlet.ATTR_USUARIO);
             String body = JsonUtil.readBody(req);
             Integer idMedicamento = JsonUtil.getInt(body, "id_medicamento");
-            Integer idResponsavel = JsonUtil.getInt(body, "id_responsavel");
+            int idResponsavel = usuario.getIdPessoa();
             Double quantidade = JsonUtil.getDouble(body, "quantidade");
             String tipoStr = JsonUtil.getString(body, "tipo");
             String observacao = JsonUtil.getString(body, "observacao");
 
-            if (idMedicamento == null || idResponsavel == null || quantidade == null || tipoStr == null) {
+            if (idMedicamento == null || quantidade == null || tipoStr == null) {
                 JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST,
-                        JsonUtil.error("Campos obrigatórios: id_medicamento, id_responsavel, quantidade, tipo."));
+                        JsonUtil.error("Campos obrigatórios: id_medicamento, quantidade, tipo."));
                 return;
             }
 
@@ -76,14 +78,26 @@ public class EstoqueServlet extends HttpServlet {
                 return;
             }
 
+            if (quantidade < 0) {
+                if (tipo != TipoMovimentacao.ENTRADA_AJUSTE) {
+                    JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST,
+                            JsonUtil.error("Quantidade negativa só é permitida para o tipo Ajuste."));
+                    return;
+                }
+                tipo = TipoMovimentacao.SAIDA_AJUSTE;
+                quantidade = -quantidade;
+            }
+
             Medicamento medicamento = medicamentoDAO.findById(idMedicamento);
             if (medicamento == null) {
                 JsonUtil.send(resp, HttpServletResponse.SC_NOT_FOUND, JsonUtil.error("Medicamento não encontrado."));
                 return;
             }
 
-            double estoqueAntes = medicamento.getEstoque_atual();
-            double estoqueDepois = estoqueAntes + quantidade;
+            double estoqueAntes = medicamento.getEstoque_atual() != null ? medicamento.getEstoque_atual() : 0.0;
+            double estoqueDepois = tipo == TipoMovimentacao.SAIDA_AJUSTE
+                    ? estoqueAntes - quantidade
+                    : estoqueAntes + quantidade;
 
             MovimentacaoEstoque mov = new MovimentacaoEstoque();
             mov.setId_medicamento(idMedicamento);

@@ -123,6 +123,34 @@ public class CatalogoServlet extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        try {
+            String path = req.getPathInfo();
+            if (path == null || path.equals("/")) {
+                JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST, JsonUtil.error("ID do catálogo não informado."));
+                return;
+            }
+            int id = Integer.parseInt(path.substring(1));
+            if (dao.findById(id) == null) {
+                JsonUtil.send(resp, HttpServletResponse.SC_NOT_FOUND, JsonUtil.error("Catálogo não encontrado."));
+                return;
+            }
+            if (dao.temMedicamentosVinculados(id)) {
+                JsonUtil.send(resp, HttpServletResponse.SC_CONFLICT,
+                    JsonUtil.error("Não é possível excluir: existem medicamentos vinculados a este item do catálogo."));
+                return;
+            }
+            dao.delete(id);
+            JsonUtil.send(resp, HttpServletResponse.SC_OK, "{\"ok\":true}");
+        } catch (NumberFormatException e) {
+            JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST, JsonUtil.error("ID inválido."));
+        } catch (Exception e) {
+            JsonUtil.send(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, JsonUtil.error("Erro interno no servidor."));
+        }
+    }
+
     private String catalogoToJson(MedicamentoCatalogo c) {
         return "{"
             + "\"id_catalogo\":"          + c.getId_catalogo() + ","

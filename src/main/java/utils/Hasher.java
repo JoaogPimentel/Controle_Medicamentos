@@ -23,7 +23,9 @@ public class Hasher {
     }
 
     public static boolean verifyPassword(String password, String stored) {
+        if (stored == null) return false;
         String[] parts = stored.split(":");
+        if (parts.length != 2) return false;
         byte[] salt = Base64.getDecoder().decode(parts[0]);
         byte[] expectedHash = Base64.getDecoder().decode(parts[1]);
         byte[] actualHash = pbkdf2(password.toCharArray(), salt);

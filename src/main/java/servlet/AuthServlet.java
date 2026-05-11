@@ -18,14 +18,12 @@ import java.sql.Date;
 
 public class AuthServlet extends HttpServlet {
 
-    private static final int SESSAO_TIMEOUT_SEGUNDOS = 30 * 60;       // 30 min
-    private static final int COOKIE_MAX_AGE_SEGUNDOS = 30 * 24 * 3600; // 30 dias
-    static final String COOKIE_EMAIL = "lembrar_email";
-    static final String ATTR_USUARIO = "usuario";
+    private static final int SESSAO_TIMEOUT_SEGUNDOS = 30 * 60;
+    private static final int COOKIE_MAX_AGE_SEGUNDOS = 30 * 24 * 3600;
+    public static final String COOKIE_EMAIL = "lembrar_email";
+    public static final String ATTR_USUARIO = "usuario";
 
     private final AuthService authService = new AuthService();
-
-    // ------------------------------------------------------------------ GET
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -38,8 +36,6 @@ public class AuthServlet extends HttpServlet {
                 JsonUtil.error("Rota não encontrada."));
         }
     }
-
-    // ----------------------------------------------------------------- POST
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -58,12 +54,11 @@ public class AuthServlet extends HttpServlet {
             JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST,
                 JsonUtil.error(e.getMessage()));
         } catch (Exception e) {
+            e.printStackTrace();
             JsonUtil.send(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                JsonUtil.error("Erro interno no servidor."));
+                JsonUtil.error("Erro interno: " + e.getClass().getSimpleName() + " – " + e.getMessage()));
         }
     }
-
-    // --------------------------------------------------------------- métodos
 
     private void login(HttpServletRequest req, HttpServletResponse resp) throws Exception {
         String body  = JsonUtil.readBody(req);
@@ -78,7 +73,6 @@ public class AuthServlet extends HttpServlet {
 
         Pessoa pessoa = authService.login(email, senha);
 
-        // --- Cria sessão ---
         HttpSession sessao = req.getSession(true);
         sessao.setMaxInactiveInterval(SESSAO_TIMEOUT_SEGUNDOS);
 
@@ -87,14 +81,12 @@ public class AuthServlet extends HttpServlet {
             pessoa.getId_pessoa(), pessoa.getNome(), pessoa.getEmail(), papel);
         sessao.setAttribute(ATTR_USUARIO, usuario);
 
-        // --- Cookie "lembrar" ---
-        // Se a requisição incluir "lembrar": true, grava o e-mail no browser
         String lembrar = JsonUtil.getString(body, "lembrar");
         if ("true".equals(lembrar)) {
             Cookie cookie = new Cookie(COOKIE_EMAIL, email);
             cookie.setMaxAge(COOKIE_MAX_AGE_SEGUNDOS);
             cookie.setPath("/");
-            cookie.setHttpOnly(true); // inacessível via JavaScript
+            cookie.setHttpOnly(true);
             resp.addCookie(cookie);
         }
 
@@ -102,12 +94,15 @@ public class AuthServlet extends HttpServlet {
     }
 
     private void cadastrar(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        String body           = JsonUtil.readBody(req);
-        String email          = JsonUtil.getString(body, "email");
-        String senha          = JsonUtil.getString(body, "senha");
-        String nome           = JsonUtil.getString(body, "nome");
-        String telefone       = JsonUtil.getString(body, "telefone");
-        String dataNascimento = JsonUtil.getString(body, "data_nascimento");
+        String body                = JsonUtil.readBody(req);
+        String email               = JsonUtil.getString(body, "email");
+        String senha               = JsonUtil.getString(body, "senha");
+        String nome                = JsonUtil.getString(body, "nome");
+        String telefone            = JsonUtil.getString(body, "telefone");
+        String dataNascimento      = JsonUtil.getString(body, "data_nascimento");
+        String roleStr             = JsonUtil.getString(body, "role");
+        String registroProf        = JsonUtil.getString(body, "registro_profissional");
+        String profissionalStr     = JsonUtil.getString(body, "profissional_saude");
 
         if (email == null || senha == null || nome == null || dataNascimento == null) {
             JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST,
@@ -115,17 +110,19 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
+        RolePessoa role = "CUIDADOR".equalsIgnoreCase(roleStr) ? RolePessoa.CUIDADOR : RolePessoa.PACIENTE;
+        boolean profissionalSaude = "true".equalsIgnoreCase(profissionalStr);
+
         Date nascimento = Date.valueOf(dataNascimento);
-        Pessoa pessoa   = authService.cadastrar(email, senha, nome, telefone, nascimento);
-        JsonUtil.send(resp, HttpServletResponse.SC_CREATED, pessoaToJson(pessoa, RolePessoa.PACIENTE));
+        Pessoa pessoa = authService.cadastrar(email, senha, nome, telefone, nascimento,
+                                              role, profissionalSaude, registroProf);
+        JsonUtil.send(resp, HttpServletResponse.SC_CREATED, pessoaToJson(pessoa, role));
     }
 
     private void logout(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        // Invalida a sessão do servidor
         HttpSession sessao = req.getSession(false);
         if (sessao != null) sessao.invalidate();
 
-        // Apaga o cookie do browser (max-age = 0 instrui o browser a deletar)
         Cookie cookie = new Cookie(COOKIE_EMAIL, "");
         cookie.setMaxAge(0);
         cookie.setPath("/");

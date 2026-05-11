@@ -11,6 +11,7 @@ public class Alerta {
     private Boolean lido;
     private Date data_geracao;
     private Date data_leitura;
+    private String nomeMedicamento;
 
     public Alerta(){}
 
@@ -42,6 +43,8 @@ public class Alerta {
     public void setLido(Boolean lido) { this.lido = lido; }
     public void setData_geracao(Date data_geracao) { this.data_geracao = data_geracao; }
     public void setData_leitura(Date data_leitura) { this.data_leitura = data_leitura; }
+    public String getNomeMedicamento() { return nomeMedicamento; }
+    public void setNomeMedicamento(String nomeMedicamento) { this.nomeMedicamento = nomeMedicamento; }
 
     @Override
     public String toString() {

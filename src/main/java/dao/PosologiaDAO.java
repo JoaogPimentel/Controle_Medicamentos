@@ -27,6 +27,15 @@ public class PosologiaDAO {
         }
     }
 
+    public void reativar(int id_posologia) throws SQLException {
+        String sql = "UPDATE posologia SET ativo = TRUE WHERE id_posologia = ?";
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id_posologia);
+            stmt.executeUpdate();
+        }
+    }
+
     public void desativar(int id_posologia) throws SQLException {
         String sql = "UPDATE posologia SET ativo = FALSE WHERE id_posologia = ?";
         try (Connection conn = ConexaoDB.getConnection();
@@ -54,6 +63,22 @@ public class PosologiaDAO {
         try (Connection conn = ConexaoDB.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id_medicamento);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) lista.add(mapear(rs));
+            }
+        }
+        return lista;
+    }
+
+    public List<Posologia> findAtivasByPaciente(int id_paciente) throws SQLException {
+        String sql = "SELECT p.* FROM posologia p " +
+                     "JOIN medicamento m ON m.id_medicamento = p.id_medicamento " +
+                     "WHERE m.id_paciente = ? AND p.ativo = TRUE " +
+                     "AND m.status NOT IN ('ARQUIVADO', 'DESCARTADO')";
+        List<Posologia> lista = new ArrayList<>();
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id_paciente);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) lista.add(mapear(rs));
             }

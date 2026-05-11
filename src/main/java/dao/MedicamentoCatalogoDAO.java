@@ -24,6 +24,26 @@ public class MedicamentoCatalogoDAO {
         }
     }
 
+    public boolean temMedicamentosVinculados(int id) throws SQLException {
+        String sql = "SELECT 1 FROM medicamento WHERE id_catalogo = ? LIMIT 1";
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        String sql = "DELETE FROM medicamento_catalogo WHERE id_catalogo = ?";
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+    }
+
     public void update(MedicamentoCatalogo catalogo) throws SQLException {
         String sql = "UPDATE medicamento_catalogo SET nome = ?, principio_ativo = ?, forma_farmaceutica = ?::forma_farmaceutica_enum WHERE id_catalogo = ?";
         try (Connection conn = ConexaoDB.getConnection();

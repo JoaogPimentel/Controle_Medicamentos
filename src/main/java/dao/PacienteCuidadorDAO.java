@@ -2,6 +2,7 @@ package dao;
 
 import db.ConexaoDB;
 import model.PacienteCuidador;
+import model.Pessoa;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -65,6 +66,31 @@ public class PacienteCuidadorDAO {
             stmt.setInt(1, id_cuidador);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) lista.add(mapear(rs));
+            }
+        }
+        return lista;
+    }
+
+    public List<Pessoa> findPacientesDoCuidador(int idCuidador) throws SQLException {
+        String sql = "SELECT p.id_pessoa, p.nome, p.email, p.telefone, p.ativo " +
+                     "FROM pessoa p " +
+                     "INNER JOIN paciente_cuidador pc ON p.id_pessoa = pc.id_paciente " +
+                     "WHERE pc.id_cuidador = ? AND pc.ativo = TRUE " +
+                     "ORDER BY p.nome";
+        List<Pessoa> lista = new ArrayList<>();
+        try (Connection conn = ConexaoDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idCuidador);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Pessoa p = new Pessoa();
+                    p.setId_pessoa(rs.getInt("id_pessoa"));
+                    p.setNome(rs.getString("nome"));
+                    p.setEmail(rs.getString("email"));
+                    p.setTelefone(rs.getString("telefone"));
+                    p.setAtivo(rs.getBoolean("ativo"));
+                    lista.add(p);
+                }
             }
         }
         return lista;

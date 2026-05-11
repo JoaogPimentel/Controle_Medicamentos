@@ -13,3 +13,6 @@ sources.txt
 # Diretório de trabalho do Tomcat embutido
 # Criado automaticamente ao iniciar o servidor; contém JSPs compilados
 tomcat.8080/
+
+# macOS
+.DS_Store

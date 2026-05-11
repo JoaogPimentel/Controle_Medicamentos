@@ -6,6 +6,7 @@ import servlet.CatalogoServlet;
 import servlet.DashboardServlet;
 import servlet.EstoqueServlet;
 import servlet.HistoricoServlet;
+import servlet.CadastroPageServlet;
 import servlet.LoginPageServlet;
 import servlet.MedicamentoServlet;
 import servlet.PosologiaServlet;
@@ -19,7 +20,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(8080);
-        tomcat.getConnector();
+        tomcat.getConnector().setProperty("URIEncoding", "UTF-8");
 
         Context ctx = tomcat.addContext("",
             new File("src/main/webapp").getAbsolutePath());
@@ -43,6 +44,9 @@ public class Main {
         ctx.addApplicationListener(AuthFilterRegistrar.class.getName());
         Tomcat.addServlet(ctx, "loginPage",  new LoginPageServlet());
         ctx.addServletMappingDecoded("/login",     "loginPage");
+
+        Tomcat.addServlet(ctx, "cadastroPage", new CadastroPageServlet());
+        ctx.addServletMappingDecoded("/cadastro",  "cadastroPage");
 
         Tomcat.addServlet(ctx, "dashboard",  new DashboardServlet());
         ctx.addServletMappingDecoded("/dashboard", "dashboard");

@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Medicamento;
 import model.Posologia;
 import model.StatusMedicamento;
+import model.UsuarioSessao;
 import services.MedicamentoService;
 import utils.JsonUtil;
 
@@ -119,9 +120,14 @@ public class MedicamentoServlet extends HttpServlet {
                 JsonUtil.send(resp, HttpServletResponse.SC_NOT_FOUND, JsonUtil.error("Medicamento não encontrado."));
                 return;
             }
-            m.setStatus(StatusMedicamento.ARQUIVADO);
-            medicamentoDAO.update(m);
-            JsonUtil.send(resp, HttpServletResponse.SC_OK, JsonUtil.success("Medicamento arquivado com sucesso."));
+            if ("true".equals(req.getParameter("force"))) {
+                medicamentoDAO.delete(id);
+                JsonUtil.send(resp, HttpServletResponse.SC_OK, JsonUtil.success("Medicamento excluído permanentemente."));
+            } else {
+                m.setStatus(StatusMedicamento.ARQUIVADO);
+                medicamentoDAO.update(m);
+                JsonUtil.send(resp, HttpServletResponse.SC_OK, JsonUtil.success("Medicamento arquivado com sucesso."));
+            }
         } catch (NumberFormatException e) {
             JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST, JsonUtil.error("ID inválido."));
         } catch (Exception e) {
@@ -150,43 +156,54 @@ public class MedicamentoServlet extends HttpServlet {
     }
 
     private void cadastrar(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        UsuarioSessao usuario = (UsuarioSessao) req.getSession(false).getAttribute(AuthServlet.ATTR_USUARIO);
         String body = JsonUtil.readBody(req);
 
         Medicamento m = new Medicamento();
         m.setId_paciente(JsonUtil.getInt(body, "id_paciente"));
         m.setId_catalogo(JsonUtil.getInt(body, "id_catalogo"));
-        m.setId_cadastrado_por(JsonUtil.getInt(body, "id_cadastrado_por"));
+        m.setId_cadastrado_por(usuario.getIdPessoa());
         m.setDosagem(JsonUtil.getString(body, "dosagem"));
         m.setEstoque_minimo(JsonUtil.getDouble(body, "estoque_minimo") != null ? JsonUtil.getDouble(body, "estoque_minimo") : 0.0);
         m.setStatus(StatusMedicamento.EM_ESTOQUE);
 
         String dataValidade = JsonUtil.getString(body, "data_validade");
-        if (dataValidade != null) m.setData_validade(Date.valueOf(dataValidade));
+        if (dataValidade != null) {
+            Date dataSql;
+            try {
+                dataSql = Date.valueOf(dataValidade);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Data de validade inválida. Use o formato AAAA-MM-DD.");
+            }
+            if (!dataSql.toLocalDate().isAfter(java.time.LocalDate.now())) {
+                throw new IllegalArgumentException("A data de validade deve ser posterior à data de hoje.");
+            }
+            m.setData_validade(dataSql);
+        }
 
-        Double qtdInicial    = JsonUtil.getDouble(body, "quantidade_inicial");
-        Integer idResponsavel = JsonUtil.getInt(body, "id_responsavel");
+        Double qtdInicial = JsonUtil.getDouble(body, "quantidade_inicial");
 
-        if (m.getId_paciente() == null || m.getId_catalogo() == null || m.getDosagem() == null || idResponsavel == null) {
-            JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST, JsonUtil.error("Campos obrigatórios: id_paciente, id_catalogo, dosagem, id_responsavel."));
+        if (m.getId_paciente() == null || m.getId_catalogo() == null || m.getDosagem() == null) {
+            JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST, JsonUtil.error("Campos obrigatórios: id_paciente, id_catalogo, dosagem."));
             return;
         }
 
-        service.cadastrar(m, qtdInicial != null ? qtdInicial : 0.0, idResponsavel);
+        service.cadastrar(m, qtdInicial != null ? qtdInicial : 0.0, usuario.getIdPessoa());
         JsonUtil.send(resp, HttpServletResponse.SC_CREATED, medicamentoToJson(m));
     }
 
     private void registrarDose(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        UsuarioSessao usuario = (UsuarioSessao) req.getSession(false).getAttribute(AuthServlet.ATTR_USUARIO);
         String body          = JsonUtil.readBody(req);
         Integer idPosologia  = JsonUtil.getInt(body, "id_posologia");
-        Integer idResponsavel = JsonUtil.getInt(body, "id_responsavel");
         String observacao    = JsonUtil.getString(body, "observacao");
 
-        if (idPosologia == null || idResponsavel == null) {
-            JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST, JsonUtil.error("Campos obrigatórios: id_posologia, id_responsavel."));
+        if (idPosologia == null) {
+            JsonUtil.send(resp, HttpServletResponse.SC_BAD_REQUEST, JsonUtil.error("Campo obrigatório: id_posologia."));
             return;
         }
 
-        service.registrarDose(idPosologia, idResponsavel, observacao);
+        service.registrarDose(idPosologia, usuario.getIdPessoa(), observacao);
         JsonUtil.send(resp, HttpServletResponse.SC_OK, JsonUtil.success("Dose registrada com sucesso."));
     }
 

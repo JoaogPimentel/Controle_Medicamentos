@@ -14,13 +14,6 @@ import services.AuthService;
 
 import java.io.IOException;
 
-/**
- * Controller MVC para a tela de login.
- *
- * GET  /login  → lê cookie de e-mail, repassa à View (login.jsp)
- * POST /login  → valida credenciais, cria sessão, redireciona ao dashboard
- *                (ou devolve à View com mensagem de erro)
- */
 public class LoginPageServlet extends HttpServlet {
 
     private static final int SESSAO_TIMEOUT   = 30 * 60;
@@ -28,26 +21,20 @@ public class LoginPageServlet extends HttpServlet {
 
     private final AuthService authService = new AuthService();
 
-    // ------------------------------------------------------------------ GET
-    // Exibe o formulário de login.
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        // Página sensível: nunca deve ser cacheada
         resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
 
-        // Se já estiver logado, vai direto ao dashboard
         HttpSession sessaoExistente = req.getSession(false);
         if (sessaoExistente != null && sessaoExistente.getAttribute(AuthServlet.ATTR_USUARIO) != null) {
             resp.sendRedirect(req.getContextPath() + "/dashboard");
             return;
         }
 
-        // Lê cookie para pré-preencher o campo e-mail
         String emailCookie = "";
         Cookie[] cookies = req.getCookies();
         if (cookies != null) {
@@ -59,25 +46,19 @@ public class LoginPageServlet extends HttpServlet {
             }
         }
 
-        // Coloca o valor como atributo para a JSP usar com EL
         req.setAttribute("emailPreenchido", emailCookie);
-
-        // Forward: o Servlet DELEGA a renderização para a View
         req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);
     }
-
-    // ----------------------------------------------------------------- POST
-    // Processa o formulário submetido pelo usuário.
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
+        req.setCharacterEncoding("UTF-8");
         String email  = req.getParameter("email");
         String senha  = req.getParameter("senha");
-        String lembrar = req.getParameter("lembrar"); // checkbox: "on" ou null
+        String lembrar = req.getParameter("lembrar");
 
-        // Validação básica no servidor (mesmo que o JS já valide no front)
         if (email == null || email.isBlank() || senha == null || senha.isBlank()) {
             req.setAttribute("erro", "E-mail e senha são obrigatórios.");
             req.setAttribute("emailPreenchido", email != null ? email : "");
@@ -88,7 +69,6 @@ public class LoginPageServlet extends HttpServlet {
         try {
             Pessoa pessoa = authService.login(email, senha);
 
-            // --- Cria a sessão ---
             HttpSession sessao = req.getSession(true);
             sessao.setMaxInactiveInterval(SESSAO_TIMEOUT);
 
@@ -96,7 +76,6 @@ public class LoginPageServlet extends HttpServlet {
             sessao.setAttribute(AuthServlet.ATTR_USUARIO,
                 new UsuarioSessao(pessoa.getId_pessoa(), pessoa.getNome(), pessoa.getEmail(), papel));
 
-            // --- Cookie "lembrar meu e-mail" ---
             if ("on".equals(lembrar)) {
                 Cookie cookie = new Cookie(AuthServlet.COOKIE_EMAIL, email);
                 cookie.setMaxAge(COOKIE_MAX_AGE);
@@ -104,18 +83,15 @@ public class LoginPageServlet extends HttpServlet {
                 cookie.setHttpOnly(true);
                 resp.addCookie(cookie);
             } else {
-                // Remove o cookie caso o checkbox esteja desmarcado
                 Cookie cookie = new Cookie(AuthServlet.COOKIE_EMAIL, "");
                 cookie.setMaxAge(0);
                 cookie.setPath("/");
                 resp.addCookie(cookie);
             }
 
-            // Redirect-after-POST: evita reenvio do formulário ao recarregar
             resp.sendRedirect(req.getContextPath() + "/dashboard");
 
         } catch (IllegalArgumentException e) {
-            // Credenciais erradas: volta à View com a mensagem de erro
             req.setAttribute("erro", e.getMessage());
             req.setAttribute("emailPreenchido", email);
             req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);

@@ -10,7 +10,6 @@ import java.util.List;
 
 public class MovimentacaoEstoqueDAO {
 
-    // Sem update/delete — movimentação é um log imutável de auditoria
     public void insert(MovimentacaoEstoque mov) throws SQLException {
         String sql = "INSERT INTO movimentacao_estoque (id_medicamento, id_registrado_por, tipo, quantidade, estoque_antes, estoque_depois, id_historico_uso, observacao) VALUES (?, ?, ?::tipo_movimentacao_enum, ?, ?, ?, ?, ?)";
         try (Connection conn = ConexaoDB.getConnection();

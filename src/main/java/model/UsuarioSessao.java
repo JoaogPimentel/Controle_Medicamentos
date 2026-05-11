@@ -2,10 +2,6 @@ package model;
 
 import java.io.Serializable;
 
-/**
- * Objeto armazenado na HttpSession após login bem-sucedido.
- * Serializable permite que o servidor persista/replique a sessão.
- */
 public class UsuarioSessao implements Serializable {
 
     private static final long serialVersionUID = 1L;
