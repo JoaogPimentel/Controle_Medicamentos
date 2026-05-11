@@ -148,7 +148,6 @@ CREATE TABLE paciente_cuidador (
     id_vinculo       SERIAL       PRIMARY KEY,
     id_paciente      INTEGER      NOT NULL,
     id_cuidador      INTEGER      NOT NULL,
-    parentesco       VARCHAR(50),
     data_vinculo     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     data_fim         TIMESTAMP,
     ativo            BOOLEAN      NOT NULL DEFAULT TRUE,
@@ -194,15 +193,14 @@ COMMENT ON TABLE medicamento_catalogo IS 'Catálogo central de medicamentos comu
 CREATE TABLE medicamento (
     id_medicamento                  SERIAL                    PRIMARY KEY,
     id_paciente                     INTEGER                   NOT NULL,
-    id_catalogo                     INTEGER,
-    nome_customizado                VARCHAR(150),
-    forma_farmaceutica_customizada  forma_farmaceutica_enum,
+    id_catalogo                     INTEGER                   NOT NULL,
+    id_cadastrado_por               INTEGER                   NOT NULL,
     dosagem                         VARCHAR(50)               NOT NULL,
     estoque_atual                   NUMERIC(10,2)             NOT NULL DEFAULT 0,
     estoque_minimo                  NUMERIC(10,2)             NOT NULL DEFAULT 0,
     data_validade                   DATE,
     status                          status_medicamento_enum   NOT NULL DEFAULT 'EM_ESTOQUE',
-    id_cadastrado_por               INTEGER                   NOT NULL,
+    data_primeiro_uso               TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
     data_cadastro                   TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao                TIMESTAMP                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -211,17 +209,10 @@ CREATE TABLE medicamento (
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_medicamento_catalogo
         FOREIGN KEY (id_catalogo) REFERENCES medicamento_catalogo(id_catalogo)
-        ON DELETE SET NULL ON UPDATE CASCADE,
+        ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_medicamento_cadastrado_por
         FOREIGN KEY (id_cadastrado_por) REFERENCES pessoa(id_pessoa)
         ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    -- XOR: ou catálogo, ou customizado. Resolve 3FN.
-    CONSTRAINT chk_medicamento_origem_xor
-        CHECK (
-            (id_catalogo IS NOT NULL AND nome_customizado IS NULL AND forma_farmaceutica_customizada IS NULL)
-         OR (id_catalogo IS NULL AND nome_customizado IS NOT NULL AND forma_farmaceutica_customizada IS NOT NULL)
-        ),
 
     CONSTRAINT chk_medicamento_estoques_nao_negativos
         CHECK (estoque_atual >= 0 AND estoque_minimo >= 0)
@@ -268,10 +259,8 @@ COMMENT ON TABLE posologia IS 'Cronograma de tomada. Um medicamento pode ter mú
 CREATE TABLE historico_uso (
     id_historico        SERIAL             PRIMARY KEY,
     id_posologia        INTEGER            NOT NULL,
-    horario_previsto    TIMESTAMP          NOT NULL,
-    horario_real        TIMESTAMP,
+    data_hora           TIMESTAMP          NOT NULL,
     status              status_dose_enum   NOT NULL DEFAULT 'PREVISTA',
-    quantidade_tomada   NUMERIC(10,2),
     id_registrado_por   INTEGER,
     observacao          TEXT,
     data_registro       TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -286,10 +275,8 @@ CREATE TABLE historico_uso (
     CONSTRAINT chk_historico_tomada_completa
         CHECK (
             status <> 'TOMADA'
-            OR (horario_real IS NOT NULL AND id_registrado_por IS NOT NULL)
-        ),
-    CONSTRAINT chk_historico_quantidade
-        CHECK (quantidade_tomada IS NULL OR quantidade_tomada >= 0)
+            OR (data_hora IS NOT NULL AND id_registrado_por IS NOT NULL)
+        )
 );
 
 COMMENT ON TABLE historico_uso IS 'Adesão ao tratamento. Cada linha = uma dose agendada, com desfecho.';
@@ -302,24 +289,24 @@ COMMENT ON TABLE historico_uso IS 'Adesão ao tratamento. Cada linha = uma dose 
 CREATE TABLE movimentacao_estoque (
     id_movimentacao     SERIAL                  PRIMARY KEY,
     id_medicamento      INTEGER                 NOT NULL,
+    id_registrado_por   INTEGER                 NOT NULL,
     tipo                tipo_movimentacao_enum  NOT NULL,
     quantidade          NUMERIC(10,2)           NOT NULL,
     estoque_antes       NUMERIC(10,2)           NOT NULL,
     estoque_depois      NUMERIC(10,2)           NOT NULL,
     id_historico_uso    INTEGER,
-    id_registrado_por   INTEGER                 NOT NULL,
     observacao          TEXT,
     data_movimentacao   TIMESTAMP               NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_mov_medicamento
         FOREIGN KEY (id_medicamento) REFERENCES medicamento(id_medicamento)
         ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_mov_historico
-        FOREIGN KEY (id_historico_uso) REFERENCES historico_uso(id_historico)
-        ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_mov_registrado_por
         FOREIGN KEY (id_registrado_por) REFERENCES pessoa(id_pessoa)
         ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT fk_mov_historico_uso
+        FOREIGN KEY (id_historico_uso) REFERENCES historico_uso(id_historico)
+        ON DELETE SET NULL ON UPDATE CASCADE,
 
     CONSTRAINT chk_mov_quantidade_positiva
         CHECK (quantidade > 0),
@@ -415,10 +402,10 @@ CREATE INDEX idx_pc_cuidador_ativo
 CREATE INDEX idx_pc_paciente_ativo
     ON paciente_cuidador(id_paciente) WHERE ativo = TRUE;
 
-CREATE INDEX idx_historico_posologia_previsto
-    ON historico_uso(id_posologia, horario_previsto);
-CREATE INDEX idx_historico_status_previsto
-    ON historico_uso(status, horario_previsto);
+CREATE INDEX idx_historico_posologia_data
+    ON historico_uso(id_posologia, data_hora);
+CREATE INDEX idx_historico_status_data
+    ON historico_uso(status, data_hora);
 
 CREATE INDEX idx_alerta_pessoa_nao_lidos
     ON alerta(id_pessoa, data_geracao DESC) WHERE lido = FALSE;
@@ -594,8 +581,8 @@ CREATE OR REPLACE VIEW v_medicamento_completo AS
 SELECT
     m.id_medicamento,
     m.id_paciente,
-    COALESCE(mc.nome, m.nome_customizado)                             AS nome,
-    COALESCE(mc.forma_farmaceutica, m.forma_farmaceutica_customizada) AS forma_farmaceutica,
+    mc.nome                                                            AS nome,
+    mc.forma_farmaceutica                                              AS forma_farmaceutica,
     mc.principio_ativo,
     m.dosagem,
     m.estoque_atual,
