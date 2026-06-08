@@ -123,9 +123,32 @@ devweb/
 
 ### 1. Banco de dados
 
+#### Opção A — Docker (recomendado)
+
+Sobe um PostgreSQL já com todo o schema criado automaticamente (o `sql/database.sql`
+é executado na primeira inicialização). Requer Docker e Docker Compose.
+
+```bash
+cp .env.example .env   # ajuste as credenciais se quiser
+docker compose up -d
+```
+
+O banco fica disponível em `localhost:5432` (db `devweb`). Comandos úteis:
+
+```bash
+docker compose logs -f db   # acompanhar a inicialização
+docker compose down         # parar (mantém os dados no volume pgdata)
+docker compose down -v      # parar e apagar os dados (recria o schema no próximo up)
+```
+
+A aplicação lê as credenciais das variáveis de ambiente `DB_URL`, `DB_USER` e
+`DB_PASSWORD` (definidas no `.env`) — não é preciso criar `db.properties`.
+
+#### Opção B — PostgreSQL local
+
 ```bash
 psql -U postgres -c "CREATE DATABASE devweb;"
-psql -U postgres -d devweb -f sql/DB_schema.sql
+psql -U postgres -d devweb -f sql/database.sql
 ```
 
 Crie o arquivo `src/main/resources/db.properties`:
@@ -135,6 +158,9 @@ db.url=jdbc:postgresql://localhost:5432/devweb
 db.user=postgres
 db.password=sua_senha
 ```
+
+> O `ConnectionPool` prioriza as variáveis de ambiente (`DB_URL`/`DB_USER`/`DB_PASSWORD`)
+> quando presentes e usa o `db.properties` como alternativa.
 
 ### 2. Compilação
 
