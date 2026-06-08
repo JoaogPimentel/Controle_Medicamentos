@@ -1,5 +1,6 @@
 package db;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,19 +37,41 @@ public class ConnectionPool {
 
     public static synchronized ConnectionPool getInstance() throws SQLException {
         if (instancia == null) {
+            // Carrega db.properties se existir; caso contrário, segue só com env vars.
             Properties props = new Properties();
-            try (InputStream in = new FileInputStream("src/main/resources/db.properties")) {
-                props.load(in);
-            } catch (IOException e) {
-                throw new RuntimeException("Erro ao carregar db.properties", e);
+            File arquivo = new File("src/main/resources/db.properties");
+            if (arquivo.exists()) {
+                try (InputStream in = new FileInputStream(arquivo)) {
+                    props.load(in);
+                } catch (IOException e) {
+                    throw new RuntimeException("Erro ao carregar db.properties", e);
+                }
             }
-            instancia = new ConnectionPool(
-                props.getProperty("db.url").trim(),
-                props.getProperty("db.user").trim(),
-                props.getProperty("db.password").trim()
-            );
+
+            // Variáveis de ambiente (ex.: docker-compose) têm precedência sobre o arquivo.
+            String url      = resolver("DB_URL",      props, "db.url");
+            String user     = resolver("DB_USER",     props, "db.user");
+            String password = resolver("DB_PASSWORD", props, "db.password");
+
+            if (url == null || user == null || password == null) {
+                throw new RuntimeException("Configuração do banco ausente: defina "
+                        + "src/main/resources/db.properties ou as variáveis de ambiente "
+                        + "DB_URL, DB_USER e DB_PASSWORD.");
+            }
+
+            instancia = new ConnectionPool(url, user, password);
         }
         return instancia;
+    }
+
+    /** Resolve um valor priorizando a variável de ambiente sobre o db.properties. */
+    private static String resolver(String envVar, Properties props, String chaveProps) {
+        String env = System.getenv(envVar);
+        if (env != null && !env.trim().isEmpty()) {
+            return env.trim();
+        }
+        String valor = props.getProperty(chaveProps);
+        return valor != null ? valor.trim() : null;
     }
 
     public Connection getConnection() throws SQLException {
