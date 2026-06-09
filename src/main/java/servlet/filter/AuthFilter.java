@@ -9,6 +9,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.UsuarioSessao;
+import utils.CorsConfig;
 import utils.JsonUtil;
 import utils.JwtUtil;
 
@@ -33,6 +34,15 @@ public class AuthFilter implements Filter {
 
         HttpServletRequest  req  = (HttpServletRequest)  request;
         HttpServletResponse resp = (HttpServletResponse) response;
+
+        // CORS: ecoa a origem permitida em toda resposta e responde o preflight
+        // OPTIONS antes da checagem de auth (o browser não envia token no preflight).
+        CorsConfig.aplicar(req, resp);
+        if (CorsConfig.isPreflight(req)) {
+            CorsConfig.aplicarPreflight(resp);
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            return;
+        }
 
         String caminho = req.getRequestURI()
                            .substring(req.getContextPath().length());
