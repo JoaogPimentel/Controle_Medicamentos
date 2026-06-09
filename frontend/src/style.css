@@ -1,0 +1,395 @@
+/* ===================================================
+   MediControl – Estilos globais
+   =================================================== */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    min-height: 100vh;
+}
+
+/* ---------- Login ---------- */
+
+.pagina-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-login {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.10);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 400px;
+    margin: 2rem auto;
+}
+
+.card-login h1 { font-size: 1.8rem; color: #2b6cb0; text-align: center; }
+.subtitulo { text-align: center; color: #718096; font-size: .9rem; margin-bottom: 1.5rem; }
+
+.campo { display: flex; flex-direction: column; margin-bottom: 1rem; }
+.campo label { font-size: .875rem; font-weight: 600; margin-bottom: .3rem; color: #4a5568; }
+.campo input, .campo select {
+    padding: .6rem .8rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color .2s;
+    background: #fff;
+}
+.campo input:focus, .campo select:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,.2); }
+
+.lembrar { display: flex; align-items: center; gap: .5rem; font-size: .875rem; margin-bottom: 1.25rem; cursor: pointer; }
+
+.btn-primario {
+    width: 100%;
+    padding: .75rem;
+    background: #2b6cb0;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+}
+.btn-primario:hover { background: #2c5282; }
+
+.alerta-erro {
+    background: #fff5f5;
+    border: 1px solid #fc8181;
+    color: #c53030;
+    padding: .7rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: .9rem;
+}
+
+/* ---------- Cabeçalho ---------- */
+
+.cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #2b6cb0;
+    color: #fff;
+    padding: 1rem 2rem;
+}
+.cabecalho h1 { font-size: 1.4rem; }
+
+.nav-usuario { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+
+.badge-papel {
+    background: rgba(255,255,255,.2);
+    border-radius: 20px;
+    padding: .2rem .7rem;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.btn-sair {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    text-decoration: none;
+    padding: .35rem .85rem;
+    border-radius: 6px;
+    font-size: .875rem;
+    transition: background .2s;
+}
+.btn-sair:hover { background: rgba(255,255,255,.3); }
+
+/* ---------- Navegação principal ---------- */
+
+.nav-principal {
+    background: #1a365d;
+    display: flex;
+    gap: .25rem;
+    padding: .4rem 1.5rem;
+    flex-wrap: wrap;
+}
+
+.nav-link {
+    color: rgba(255,255,255,.7);
+    text-decoration: none;
+    padding: .4rem .9rem;
+    border-radius: 5px;
+    font-size: .875rem;
+    transition: background .2s, color .2s;
+}
+
+.nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+.nav-link.ativo { background: rgba(255,255,255,.18); color: #fff; font-weight: 600; }
+
+/* ---------- Breadcrumb ---------- */
+
+.breadcrumb {
+    padding: .6rem 2rem;
+    font-size: .875rem;
+    color: #718096;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f7fafc;
+}
+
+.breadcrumb a { color: #2b6cb0; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+
+/* ---------- Conteúdo principal ---------- */
+
+.conteudo { padding: 2rem; max-width: 900px; margin: 0 auto; }
+
+.card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.card h2 { font-size: 1.1rem; display: flex; align-items: center; gap: .6rem; margin-bottom: 1rem; }
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+.card-header h2 { margin-bottom: 0; }
+
+/* ---------- Tabelas ---------- */
+
+.tabela-wrapper { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+
+th {
+    text-align: left;
+    padding: .55rem .8rem;
+    border-bottom: 2px solid #e2e8f0;
+    color: #4a5568;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+
+td { padding: .65rem .8rem; border-bottom: 1px solid #edf2f7; color: #2d3748; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f7fafc; }
+
+.acoes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .35rem;
+    min-width: 180px;
+}
+.acoes .btn-secundario,
+.acoes .btn-perigo,
+.acoes a.btn-secundario {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* ---------- Botões ---------- */
+
+.btn-secundario {
+    padding: .32rem .75rem;
+    background: transparent;
+    color: #2b6cb0;
+    border: 1px solid #2b6cb0;
+    border-radius: 5px;
+    font-size: .825rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s, color .2s;
+    display: inline-block;
+    white-space: nowrap;
+}
+.btn-secundario:hover { background: #2b6cb0; color: #fff; }
+
+.btn-perigo {
+    padding: .32rem .75rem;
+    background: transparent;
+    color: #e53e3e;
+    border: 1px solid #e53e3e;
+    border-radius: 5px;
+    font-size: .825rem;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+    white-space: nowrap;
+}
+.btn-perigo:hover { background: #e53e3e; color: #fff; }
+
+/* ---------- Badges de status ---------- */
+
+.badge-count {
+    background: #e53e3e;
+    color: #fff;
+    border-radius: 999px;
+    padding: .1rem .55rem;
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.tag-status {
+    display: inline-block;
+    padding: .15rem .6rem;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.tag-EM_USO     { background: #c6f6d5; color: #276749; }
+.tag-EM_ESTOQUE { background: #bee3f8; color: #2a69ac; }
+.tag-ARQUIVADO  { background: #e2e8f0; color: #718096; }
+.tag-DESCARTADO { background: #fed7d7; color: #9b2c2c; }
+.tag-TOMADA     { background: #c6f6d5; color: #276749; }
+.tag-ATRASADA   { background: #fed7d7; color: #9b2c2c; }
+.tag-PREVISTA   { background: #bee3f8; color: #2a69ac; }
+.tag-PULADA     { background: #feebc8; color: #7b341e; }
+.tag-ativo      { background: #c6f6d5; color: #276749; }
+.tag-inativo    { background: #e2e8f0; color: #718096; }
+
+/* ---------- Formulário em grade ---------- */
+
+.campos-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: .75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.separador {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 1.25rem 0;
+}
+
+/* ---------- Barra de informações ---------- */
+
+.info-bar {
+    display: flex;
+    gap: 2rem;
+    padding: .85rem 1rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.info-item { font-size: .875rem; color: #4a5568; }
+.info-item strong { display: block; font-size: 1.25rem; color: #2b6cb0; font-weight: 700; }
+
+/* ---------- Mensagens de feedback ---------- */
+
+.mensagem-sucesso {
+    background: #f0fff4;
+    border: 1px solid #9ae6b4;
+    color: #276749;
+    padding: .7rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: .9rem;
+}
+
+/* ---------- Lista de alertas ---------- */
+
+.lista-alertas { list-style: none; display: flex; flex-direction: column; gap: .6rem; }
+
+.alerta-item {
+    display: grid;
+    grid-template-columns: 160px 1fr auto;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    background: #f7fafc;
+    border-left: 4px solid #e53e3e;
+    border-radius: 4px;
+    font-size: .9rem;
+}
+
+.tipo-alerta { font-weight: 700; color: #c53030; font-size: .8rem; }
+.data-alerta { color: #a0aec0; font-size: .78rem; }
+
+.vazio { color: #a0aec0; font-style: italic; }
+
+/* ---------- Cards de paciente (dashboard cuidador) ---------- */
+
+.grade-pacientes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: .5rem;
+}
+
+.card-paciente {
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+
+.card-paciente-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.nome-paciente { font-size: 1rem; color: #2d3748; }
+
+.badge-alertas-paciente {
+    background: #e53e3e;
+    color: #fff;
+    border-radius: 999px;
+    padding: .1rem .5rem;
+    font-size: .75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.email-paciente { font-size: .8rem; color: #a0aec0; margin: 0; }
+
+.acoes-paciente {
+    display: flex;
+    gap: .4rem;
+    margin-top: .5rem;
+    flex-wrap: wrap;
+}
+
+/* ---------- Banner de contexto (cuidador gerenciando paciente) ---------- */
+
+.banner-contexto {
+    background: #ebf8ff;
+    border-bottom: 1px solid #bee3f8;
+    padding: .55rem 2rem;
+    font-size: .875rem;
+    color: #2a69ac;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.banner-contexto a { color: #2b6cb0; text-decoration: none; font-weight: 600; }
+.banner-contexto a:hover { text-decoration: underline; }
+.banner-contexto span { color: #4a5568; }
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width: 600px) {
+    .cabecalho { flex-direction: column; gap: .75rem; text-align: center; }
+    .alerta-item { grid-template-columns: 1fr; }
+    .conteudo { padding: 1rem; }
+    .nav-principal { padding: .4rem .75rem; }
+    .info-bar { gap: 1rem; }
+}

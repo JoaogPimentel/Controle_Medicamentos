@@ -1,6 +1,9 @@
 # Credenciais do banco
 src/main/resources/
 
+# Variáveis de ambiente (credenciais do docker-compose / app)
+.env
+
 # Schema SQL (contém estrutura sensível)
 DB_schema.sql
 
