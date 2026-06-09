@@ -6,6 +6,7 @@ export async function login(email, senha) {
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.erro || 'Erro ao fazer login')
+    localStorage.setItem('usuario', JSON.stringify(data))
     return data
 }
 
@@ -20,6 +21,8 @@ export async function cadastrar(body) {
     return data
 }
 
-export function logout() {
-    return fetch('/api/auth/logout')
+export async function logout() {
+    await fetch('/api/auth/logout')
+    localStorage.removeItem('usuario')
+    localStorage.removeItem('emailSalvo')
 }
