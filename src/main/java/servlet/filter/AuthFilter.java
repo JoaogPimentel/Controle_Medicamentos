@@ -8,9 +8,9 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.UsuarioSessao;
 import utils.JsonUtil;
+import utils.JwtUtil;
 
 import java.io.IOException;
 import java.util.Set;
@@ -48,10 +48,7 @@ public class AuthFilter implements Filter {
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
 
-        HttpSession    sessao  = req.getSession(false);
-        UsuarioSessao  usuario = (sessao != null)
-                                 ? (UsuarioSessao) sessao.getAttribute(servlet.AuthServlet.ATTR_USUARIO)
-                                 : null;
+        UsuarioSessao usuario = JwtUtil.validar(extrairToken(req));
 
         if (usuario == null) {
             if (caminho.startsWith("/api/")) {
@@ -63,11 +60,25 @@ public class AuthFilter implements Filter {
             return;
         }
 
+        // Publica o usuário do token no request para os servlets consumirem.
+        req.setAttribute(servlet.AuthServlet.ATTR_USUARIO, usuario);
         chain.doFilter(request, response);
     }
 
     @Override
     public void destroy() {}
+
+    /** Extrai o token do header {@code Authorization: Bearer <token>}; null se ausente. */
+    private String extrairToken(HttpServletRequest req) {
+        String header = req.getHeader("Authorization");
+        if (header == null) return null;
+        header = header.trim();
+        if (header.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            String token = header.substring(7).trim();
+            return token.isEmpty() ? null : token;
+        }
+        return null;
+    }
 
     private boolean ehPublico(String caminho) {
         return ROTAS_PUBLICAS.contains(caminho)

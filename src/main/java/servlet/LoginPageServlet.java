@@ -16,8 +16,10 @@ import java.io.IOException;
 
 public class LoginPageServlet extends HttpServlet {
 
-    private static final int SESSAO_TIMEOUT   = 30 * 60;
-    private static final int COOKIE_MAX_AGE   = 30 * 24 * 3600;
+    private static final int    SESSAO_TIMEOUT = 30 * 60;
+    private static final int    COOKIE_MAX_AGE = 30 * 24 * 3600;
+    /** Cookie legado "lembrar e-mail" do fluxo JSP (removido junto com este servlet na migração para JWT). */
+    private static final String COOKIE_EMAIL   = "email_lembrado";
 
     private final AuthService authService = new AuthService();
 
@@ -39,7 +41,7 @@ public class LoginPageServlet extends HttpServlet {
         Cookie[] cookies = req.getCookies();
         if (cookies != null) {
             for (Cookie c : cookies) {
-                if (AuthServlet.COOKIE_EMAIL.equals(c.getName())) {
+                if (COOKIE_EMAIL.equals(c.getName())) {
                     emailCookie = c.getValue();
                     break;
                 }
@@ -77,13 +79,13 @@ public class LoginPageServlet extends HttpServlet {
                 new UsuarioSessao(pessoa.getId_pessoa(), pessoa.getNome(), pessoa.getEmail(), papel));
 
             if ("on".equals(lembrar)) {
-                Cookie cookie = new Cookie(AuthServlet.COOKIE_EMAIL, email);
+                Cookie cookie = new Cookie(COOKIE_EMAIL, email);
                 cookie.setMaxAge(COOKIE_MAX_AGE);
                 cookie.setPath("/");
                 cookie.setHttpOnly(true);
                 resp.addCookie(cookie);
             } else {
-                Cookie cookie = new Cookie(AuthServlet.COOKIE_EMAIL, "");
+                Cookie cookie = new Cookie(COOKIE_EMAIL, "");
                 cookie.setMaxAge(0);
                 cookie.setPath("/");
                 resp.addCookie(cookie);

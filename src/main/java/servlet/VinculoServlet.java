@@ -95,9 +95,7 @@ public class VinculoServlet extends HttpServlet {
     }
 
     private boolean isCuidador(HttpServletRequest req) {
-        var sessao = req.getSession(false);
-        if (sessao == null) return false;
-        UsuarioSessao usuario = (UsuarioSessao) sessao.getAttribute(AuthServlet.ATTR_USUARIO);
+        UsuarioSessao usuario = AuthServlet.usuarioAtual(req);
         return usuario != null && usuario.getPapel() == RolePessoa.CUIDADOR;
     }
 
@@ -112,7 +110,7 @@ public class VinculoServlet extends HttpServlet {
         }
 
         try {
-            UsuarioSessao usuario = (UsuarioSessao) req.getSession(false).getAttribute(AuthServlet.ATTR_USUARIO);
+            UsuarioSessao usuario = AuthServlet.usuarioAtual(req);
             String body        = JsonUtil.readBody(req);
             Integer idPaciente = JsonUtil.getInt(body, "id_paciente");
             int idCuidador     = usuario.getIdPessoa();

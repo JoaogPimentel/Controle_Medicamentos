@@ -156,7 +156,7 @@ public class MedicamentoServlet extends HttpServlet {
     }
 
     private void cadastrar(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        UsuarioSessao usuario = (UsuarioSessao) req.getSession(false).getAttribute(AuthServlet.ATTR_USUARIO);
+        UsuarioSessao usuario = AuthServlet.usuarioAtual(req);
         String body = JsonUtil.readBody(req);
 
         Medicamento m = new Medicamento();
@@ -193,7 +193,7 @@ public class MedicamentoServlet extends HttpServlet {
     }
 
     private void registrarDose(HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        UsuarioSessao usuario = (UsuarioSessao) req.getSession(false).getAttribute(AuthServlet.ATTR_USUARIO);
+        UsuarioSessao usuario = AuthServlet.usuarioAtual(req);
         String body          = JsonUtil.readBody(req);
         Integer idPosologia  = JsonUtil.getInt(body, "id_posologia");
         String observacao    = JsonUtil.getString(body, "observacao");

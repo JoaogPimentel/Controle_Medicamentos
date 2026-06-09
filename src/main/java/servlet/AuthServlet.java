@@ -2,28 +2,30 @@ package servlet;
 
 import dao.RoleDAO;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.Pessoa;
 import model.RolePessoa;
 import model.UsuarioSessao;
 import services.AuthService;
 import utils.JsonUtil;
+import utils.JwtUtil;
 
 import java.io.IOException;
 import java.sql.Date;
 
 public class AuthServlet extends HttpServlet {
 
-    private static final int SESSAO_TIMEOUT_SEGUNDOS = 30 * 60;
-    private static final int COOKIE_MAX_AGE_SEGUNDOS = 30 * 24 * 3600;
-    public static final String COOKIE_EMAIL = "lembrar_email";
+    /** Nome do atributo de request onde o {@link AuthFilter} publica o usuário do token. */
     public static final String ATTR_USUARIO = "usuario";
 
     private final AuthService authService = new AuthService();
+
+    /** Usuário autenticado do request atual (preenchido pelo AuthFilter a partir do JWT). */
+    public static UsuarioSessao usuarioAtual(HttpServletRequest req) {
+        return (UsuarioSessao) req.getAttribute(ATTR_USUARIO);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -73,24 +75,14 @@ public class AuthServlet extends HttpServlet {
 
         Pessoa pessoa = authService.login(email, senha);
 
-        HttpSession sessao = req.getSession(true);
-        sessao.setMaxInactiveInterval(SESSAO_TIMEOUT_SEGUNDOS);
-
         RolePessoa papel = new RoleDAO().findRole(pessoa.getId_pessoa());
-        UsuarioSessao usuario = new UsuarioSessao(
-            pessoa.getId_pessoa(), pessoa.getNome(), pessoa.getEmail(), papel);
-        sessao.setAttribute(ATTR_USUARIO, usuario);
+        String token = JwtUtil.gerar(pessoa.getId_pessoa(), pessoa.getNome(), papel);
 
-        String lembrar = JsonUtil.getString(body, "lembrar");
-        if ("true".equals(lembrar)) {
-            Cookie cookie = new Cookie(COOKIE_EMAIL, email);
-            cookie.setMaxAge(COOKIE_MAX_AGE_SEGUNDOS);
-            cookie.setPath("/");
-            cookie.setHttpOnly(true);
-            resp.addCookie(cookie);
-        }
-
-        JsonUtil.send(resp, HttpServletResponse.SC_OK, pessoaToJson(pessoa, papel));
+        String json = "{"
+            + "\"token\":\"" + token + "\","
+            + "\"usuario\":" + pessoaToJson(pessoa, papel)
+            + "}";
+        JsonUtil.send(resp, HttpServletResponse.SC_OK, json);
     }
 
     private void cadastrar(HttpServletRequest req, HttpServletResponse resp) throws Exception {
@@ -120,15 +112,9 @@ public class AuthServlet extends HttpServlet {
     }
 
     private void logout(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        HttpSession sessao = req.getSession(false);
-        if (sessao != null) sessao.invalidate();
-
-        Cookie cookie = new Cookie(COOKIE_EMAIL, "");
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
-        resp.addCookie(cookie);
-
-        resp.sendRedirect(req.getContextPath() + "/login");
+        // Auth stateless (JWT): não há sessão no servidor — o token é descartado
+        // pelo cliente. A rota é mantida apenas para confirmar o logout.
+        JsonUtil.send(resp, HttpServletResponse.SC_OK, JsonUtil.success("Logout efetuado."));
     }
 
     private String pessoaToJson(Pessoa p, RolePessoa papel) {
