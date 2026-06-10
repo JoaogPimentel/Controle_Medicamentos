@@ -1,0 +1,25 @@
+meta {
+  name: 01 Buscar paciente por email
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/vinculos/buscar-paciente?email={{emailPaciente}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  email: {{emailPaciente}}
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Localiza um paciente pelo e-mail para então vinculá-lo. Rode "Auth > Login
+  Cuidador" antes (apenas cuidadores acessam vínculos). Retorna 404 se o e-mail
+  não pertencer a um paciente.
+}

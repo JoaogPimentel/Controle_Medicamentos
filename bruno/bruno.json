@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Controle de Medicamentos",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

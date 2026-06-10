@@ -1,0 +1,31 @@
+meta {
+  name: 06 Atualizar Medicamento
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/medicamentos/{{idMedicamento}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "dosagem": "2 comprimidos",
+    "estoque_minimo": 10
+  }
+}
+
+docs {
+  Atualiza campos do medicamento (dosagem, estoque_minimo, data_validade,
+  status). Campos omitidos são mantidos.
+}

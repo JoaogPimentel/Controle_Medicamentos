@@ -1,0 +1,35 @@
+meta {
+  name: 03 Login Paciente
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{emailPaciente}}",
+    "senha": "{{senhaPadrao}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const body = res.getBody();
+    bru.setEnvVar("token", body.token);
+    bru.setEnvVar("idPaciente", body.usuario.id_pessoa);
+  }
+}
+
+docs {
+  Autentica o paciente. Salva o token JWT e o id do paciente no ambiente para
+  os demais requests. Rode este login antes das rotas autenticadas de paciente.
+}

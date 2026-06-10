@@ -1,0 +1,24 @@
+meta {
+  name: 01 Listar Historico por posologia
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/historico?posologia={{idPosologia}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  posologia: {{idPosologia}}
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Lista o histórico de uso (doses registradas) de uma posologia. Parâmetro
+  'posologia' obrigatório.
+}

@@ -1,0 +1,41 @@
+meta {
+  name: 01 Criar Medicamento
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/medicamentos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id_paciente": {{idPaciente}},
+    "id_catalogo": {{idCatalogo}},
+    "dosagem": "1 comprimido",
+    "estoque_minimo": 5,
+    "quantidade_inicial": 30,
+    "data_validade": "2027-12-31"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("idMedicamento", res.getBody().id_medicamento);
+  }
+}
+
+docs {
+  Cria um medicamento para o paciente (201) e salva idMedicamento. Requer
+  idPaciente (login) e idCatalogo (criar catálogo) preenchidos no ambiente.
+}

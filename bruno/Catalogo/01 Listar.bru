@@ -1,0 +1,19 @@
+meta {
+  name: 01 Listar Catalogo
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/catalogo
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Lista todo o catálogo. Aceita filtro opcional ?nome=... para busca parcial.
+}

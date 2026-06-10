@@ -1,0 +1,35 @@
+meta {
+  name: 04 Login Cuidador
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{emailCuidador}}",
+    "senha": "{{senhaPadrao}}"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const body = res.getBody();
+    bru.setEnvVar("token", body.token);
+    bru.setEnvVar("idCuidador", body.usuario.id_pessoa);
+  }
+}
+
+docs {
+  Autentica o cuidador e salva o token. Use antes das rotas de vínculos
+  (apenas cuidadores podem gerenciar vínculos — retorna 403 caso contrário).
+}
