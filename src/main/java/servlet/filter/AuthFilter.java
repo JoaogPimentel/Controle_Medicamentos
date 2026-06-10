@@ -19,8 +19,6 @@ import java.util.Set;
 public class AuthFilter implements Filter {
 
     private static final Set<String> ROTAS_PUBLICAS = Set.of(
-        "/login",
-        "/cadastro",
         "/api/auth/login",
         "/api/auth/cadastrar"
     );
@@ -61,12 +59,10 @@ public class AuthFilter implements Filter {
         UsuarioSessao usuario = JwtUtil.validar(extrairToken(req));
 
         if (usuario == null) {
-            if (caminho.startsWith("/api/")) {
-                JsonUtil.send(resp, HttpServletResponse.SC_UNAUTHORIZED,
-                    JsonUtil.error("Não autenticado. Faça login em /api/auth/login."));
-            } else {
-                resp.sendRedirect(req.getContextPath() + "/login");
-            }
+            // Back-end é uma API pura: sem token válido, responde 401 JSON
+            // (não há mais página de login para redirecionar).
+            JsonUtil.send(resp, HttpServletResponse.SC_UNAUTHORIZED,
+                JsonUtil.error("Não autenticado. Faça login em /api/auth/login."));
             return;
         }
 
