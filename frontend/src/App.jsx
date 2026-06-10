@@ -7,6 +7,7 @@ import CatalogoPage from './pages/CatalogoPage'
 import PosologiaPage from './pages/PosologiaPage'
 import EstoquePage from './pages/EstoquePage'
 import HistoricoPage from './pages/HistoricoPage'
+import VinculosPage from './pages/VinculosPage'
 
 export default function App() {
     return (
@@ -21,6 +22,7 @@ export default function App() {
                 <Route path="/posologia" element={<PosologiaPage />} />
                 <Route path="/estoque" element={<EstoquePage />} />
                 <Route path="/historico" element={<HistoricoPage />} />
+                <Route path="/vinculos" element={<VinculosPage />} />
             </Routes>
         </BrowserRouter>
     )
