@@ -1,5 +1,12 @@
 import { apiFetch } from './api'
 
+export async function buscarMedicamento(id) {
+    const res = await apiFetch(`/api/medicamentos/${id}`)
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.erro || 'Erro ao buscar medicamento')
+    return data
+}
+
 export async function buscarMedicamentos(idPaciente) {
     const res = await apiFetch(`/api/medicamentos?paciente=${idPaciente}`)
     const data = await res.json()

@@ -1,5 +1,12 @@
 import { apiFetch } from './api'
 
+export async function buscarItemCatalogo(id) {
+    const res = await apiFetch(`/api/catalogo/${id}`)
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.erro || 'Erro ao buscar item do catálogo')
+    return data
+}
+
 export async function buscarCatalogo() {
     const res = await apiFetch('/api/catalogo')
     const data = await res.json()
