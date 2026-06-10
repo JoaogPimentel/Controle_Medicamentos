@@ -1,0 +1,33 @@
+meta {
+  name: 01 Listar Posologias
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/posologias?medicamento={{idMedicamento}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  medicamento: {{idMedicamento}}
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const lista = res.getBody();
+    if (Array.isArray(lista) && lista.length > 0) {
+      bru.setEnvVar("idPosologia", lista[0].id_posologia);
+    }
+  }
+}
+
+docs {
+  Lista as posologias do medicamento e salva idPosologia (primeira da lista),
+  usado em "Medicamentos > Registrar dose" e nas rotas abaixo.
+}

@@ -1,0 +1,23 @@
+meta {
+  name: 02 Listar por paciente
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/medicamentos?paciente={{idPaciente}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  paciente: {{idPaciente}}
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Lista os medicamentos do paciente. Parâmetro 'paciente' obrigatório.
+}

@@ -1,0 +1,24 @@
+meta {
+  name: 02 Listar movimentacoes
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/estoque?medicamento={{idMedicamento}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  medicamento: {{idMedicamento}}
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Lista as movimentações de estoque do medicamento. Parâmetro 'medicamento'
+  obrigatório.
+}

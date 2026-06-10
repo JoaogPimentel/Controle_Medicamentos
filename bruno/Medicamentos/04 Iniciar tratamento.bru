@@ -1,0 +1,35 @@
+meta {
+  name: 04 Iniciar tratamento
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/medicamentos/tratamento
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id_medicamento": {{idMedicamento}},
+    "intervalo_horas": 8,
+    "duracao_dias": 7,
+    "quantidade_por_dose": 1,
+    "horario_primeira_dose": "08:00:00",
+    "data_inicio": "2026-06-09"
+  }
+}
+
+docs {
+  Cria a posologia/tratamento do medicamento (201). Depois rode
+  "Posologias > Listar" para capturar idPosologia e registrar doses.
+}

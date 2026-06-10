@@ -1,0 +1,32 @@
+meta {
+  name: 02 Cadastrar Cuidador
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/auth/cadastrar
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nome": "Cuidador Bruno",
+    "email": "{{emailCuidador}}",
+    "senha": "{{senhaPadrao}}",
+    "telefone": "11988887777",
+    "data_nascimento": "1985-03-22",
+    "role": "CUIDADOR",
+    "profissional_saude": "true",
+    "registro_profissional": "COREN-123456"
+  }
+}
+
+docs {
+  Cria um cuidador (papel CUIDADOR). Necessário para os testes de vínculos.
+}

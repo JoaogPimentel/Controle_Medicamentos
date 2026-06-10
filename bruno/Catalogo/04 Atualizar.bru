@@ -1,0 +1,31 @@
+meta {
+  name: 04 Atualizar Catalogo
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/catalogo/{{idCatalogo}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nome": "Dipirona 1g",
+    "principio_ativo": "Dipirona Sódica",
+    "forma_farmaceutica": "COMPRIMIDO"
+  }
+}
+
+docs {
+  Atualiza os campos enviados do item de catálogo. Campos omitidos são mantidos.
+}

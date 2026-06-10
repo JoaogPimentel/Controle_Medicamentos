@@ -1,0 +1,19 @@
+meta {
+  name: 03 Buscar Catalogo por ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/catalogo/{{idCatalogo}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Busca um item do catálogo pelo id. Retorna 404 se não existir.
+}

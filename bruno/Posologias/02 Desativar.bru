@@ -1,0 +1,19 @@
+meta {
+  name: 02 Desativar Posologia
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/posologias/{{idPosologia}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Desativa (encerra) a posologia. Retorna 200.
+}

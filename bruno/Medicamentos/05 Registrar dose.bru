@@ -1,0 +1,31 @@
+meta {
+  name: 05 Registrar dose
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/medicamentos/dose
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id_posologia": {{idPosologia}},
+    "observacao": "Dose tomada no horário"
+  }
+}
+
+docs {
+  Registra a tomada de uma dose, baixando o estoque. Requer idPosologia
+  (capturado em "Posologias > Listar" após iniciar o tratamento).
+}

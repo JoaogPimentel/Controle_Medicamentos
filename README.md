@@ -1,249 +1,222 @@
 # Plataforma de Controle de Medicamentos
 
-Sistema web para gerenciamento de medicamentos de pacientes, com controle de estoque, posologia, histórico de doses e alertas. Desenvolvido em Java com Servlets, JSP e PostgreSQL, seguindo o padrão MVC.
+Sistema para gerenciamento de medicamentos de pacientes — controle de estoque,
+posologia, histórico de doses e alertas. O projeto é dividido em uma **API REST
+desacoplada** (Java + Jakarta Servlets) e um **front-end SPA** (React + Vite) que
+a consome via HTTP, autenticando-se por **JWT**.
+
 
 ## Tecnologias
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Front-end | HTML5, CSS3, JavaScript, JSP (JavaServer Pages) |
-| Back-end | Java 11+, Jakarta Servlets |
-| Banco de dados | PostgreSQL 13+ |
-| Servidor | Apache Tomcat 10.1 (embutido) |
+| Front-end | React 18, Vite, JavaScript |
+| Back-end | Java 11+, Jakarta Servlets, Apache Tomcat 10.1 (embutido) |
+| Autenticação | JWT (HS256) stateless |
+| Banco de dados | PostgreSQL 16 |
 
-## Arquitetura MVC
+## Arquitetura
+
+API pura: o back-end não renderiza HTML — todas as rotas respondem JSON. O front
+React é servido separadamente (Vite em dev; GitHub Pages em produção) e consome a
+API com `Authorization: Bearer <token>`.
 
 ```
-Requisição HTTP
+React (Vite / GitHub Pages)
+      │  fetch + Authorization: Bearer <jwt>
+      ▼
+ AuthFilter        ← CORS + valida o JWT, publica o usuário no request
       │
       ▼
- AuthFilter          ← verifica sessão em todas as rotas protegidas
+  Servlet          ← Controller: valida entrada, chama Services/DAOs
       │
       ▼
-  Servlet            ← Controller: processa dados, chama Services/DAOs
-      │
-      ├─ forward() ──► JSP (View)     ← renderiza HTML com atributos da requisição
-      │
-      └─ JSON ────────► Cliente API   ← para chamadas REST
+  JSON ──────────► Cliente
 ```
 
-### Controller
-Servlets em `servlet/` interceptam as requisições HTTP, interagem com a camada de serviço e utilizam `RequestDispatcher.forward()` para repassar dados às Views JSP.
-
-### Model
-JavaBeans em `model/`, DAOs em `dao/` e regras de negócio em `services/`. O acesso ao banco é centralizado via `ConexaoDB`, que delega a um pool de conexões.
-
-### View
-Páginas JSP em `src/main/webapp/WEB-INF/views/` responsáveis apenas por renderizar os atributos preparados pelo Controller via Expression Language (EL) e scriptlets.
+- **Controller:** Servlets em `servlet/` processam as requisições e respondem JSON via `JsonUtil`.
+- **Model:** JavaBeans em `model/`, DAOs em `dao/` (PreparedStatement) e regras em `services/`. Acesso ao banco via `ConnectionPool`.
+- **Autenticação:** `JwtUtil` gera/valida tokens; `AuthFilter` intercepta todas as rotas.
 
 ## Funcionalidades
 
 - Cadastro e autenticação de usuários com hash de senha (PBKDF2-SHA256)
 - Papéis de acesso: `PACIENTE`, `CUIDADOR`, `ADMIN`
-- Vínculo N:N entre pacientes e cuidadores (apenas cuidadores podem gerenciar vínculos)
+- Vínculo N:N entre pacientes e cuidadores (apenas cuidadores gerenciam vínculos)
 - Catálogo central de medicamentos com princípio ativo e forma farmacêutica
 - Controle de estoque rastreável por movimentações imutáveis e auditáveis
-- Definição de posologia com intervalo de doses e duração do tratamento
+- Posologia com intervalo de doses e duração do tratamento
 - Histórico de adesão ao tratamento (dose tomada, atrasada, pulada)
-- Sistema de alertas para doses próximas, estoque baixo e vencimento
+- Alertas para doses próximas, estoque baixo e vencimento
 
 ## Segurança
 
-- **Autenticação:** login por formulário (`/login`) com sessão `HttpSession` (timeout: 30 min)
-- **Cookie:** opção "lembrar e-mail" grava cookie `HttpOnly` com validade de 30 dias
-- **Autorização:** `AuthFilter` protege todas as rotas; rotas de API retornam `401 JSON` sem sessão
-- **Papéis:** endpoints críticos verificam o papel do usuário na sessão (ex: `403` para PACIENTE em rotas de vínculo)
-- **Cache:** páginas autenticadas recebem `Cache-Control: no-store`; arquivos estáticos recebem `max-age=86400`
-- **Validação:** formulários validados no front-end (JavaScript) e no back-end (Servlet)
-
-## Armazenamento
-
-| Mecanismo | Uso |
-|-----------|-----|
-| PostgreSQL | Persistência principal de todos os dados |
-| Connection Pool | Pool de 10 conexões com reuso via `java.lang.reflect.Proxy` |
-| `HttpSession` | Objeto `UsuarioSessao` (id, nome, email, papel) durante a navegação |
-| Cookie | `lembrar_email` — preferência persistida no browser do cliente |
-| Cache HTTP | Headers `Cache-Control` configurados por tipo de recurso |
+- **Autenticação JWT (HS256):** o login retorna `{ token, usuario }`. O token carrega
+  `id_pessoa`, `nome`, `papel`, `iat` e `exp` (validade de 8 horas). Não há sessão
+  no servidor — o estado fica no cliente.
+- **Segredo fora do código:** a assinatura usa a variável de ambiente `JWT_SECRET`.
+  Sem ela, um segredo de desenvolvimento é usado **apenas com aviso no log** (nunca em produção).
+- **Autorização:** `AuthFilter` exige `Authorization: Bearer <token>` em todas as
+  rotas `/api/*`, exceto login/cadastro. Sem token válido → `401 JSON`.
+- **Papéis:** rotas críticas verificam o papel do token (ex.: `403` para PACIENTE em vínculos).
+- **CORS configurável:** origens permitidas via `CORS_ORIGIN`; o preflight `OPTIONS`
+  é respondido com `204`. Como a auth é por `Bearer` (não cookies), a origem exata é
+  ecoada sem `Access-Control-Allow-Credentials`.
+- **Cache:** rotas autenticadas recebem `Cache-Control: no-store`; estáticos `max-age=86400`.
 
 ## Estrutura do projeto
 
 ```
-devweb/
-├── lib/                            # Dependências JAR
-│   ├── tomcat-embed-core.jar
-│   ├── tomcat-embed-jasper.jar
-│   ├── tomcat-embed-el.jar
-│   ├── servlet-api.jar
-│   ├── el-api.jar
-│   ├── jakarta.annotation-api.jar
-│   ├── jakarta.servlet.jsp-api.jar
-│   ├── ecj.jar
-│   └── postgresql-*.jar
-├── src/main/
-│   ├── java/
-│   │   ├── Main.java               # Inicialização do Tomcat embutido
-│   │   ├── db/
-│   │   │   ├── ConnectionPool.java # Pool de conexões (ArrayBlockingQueue + Proxy)
-│   │   │   └── ConexaoDB.java      # Fachada para o pool
-│   │   ├── model/                  # Entidades e enums (JavaBeans)
-│   │   ├── dao/                    # Acesso a dados (PreparedStatement)
-│   │   ├── services/               # Regras de negócio
-│   │   ├── servlet/
-│   │   │   ├── filter/
-│   │   │   │   ├── AuthFilter.java          # Filtro de autenticação global
-│   │   │   │   └── AuthFilterRegistrar.java # Registra o filtro via ServletContextListener
-│   │   │   ├── AuthServlet.java      # POST /api/auth/login | cadastrar | GET /logout
-│   │   │   ├── LoginPageServlet.java # GET /login (exibe JSP) | POST /login (processa form)
-│   │   │   ├── DashboardServlet.java # GET /dashboard → dashboard.jsp
-│   │   │   ├── MedicamentoServlet.java
-│   │   │   ├── AlertaServlet.java
-│   │   │   └── VinculoServlet.java
-│   │   └── utils/
-│   │       ├── Hasher.java         # PBKDF2-SHA256 (310.000 iterações)
-│   │       └── JsonUtil.java       # Serialização/parsing JSON manual
-│   ├── resources/
-│   │   └── db.properties           # Credenciais do banco (não versionado)
-│   └── webapp/
-│       ├── WEB-INF/views/
-│       │   ├── login.jsp           # View: tela de login
-│       │   └── dashboard.jsp       # View: dashboard com alertas
-│       └── css/
-│           └── style.css
-└── sql/
-    └── DB_schema.sql               # DDL completo (não versionado)
+Controle_Medicamentos/
+├── bruno/                      # Collection Bruno de testes da API (ver bruno/README.md)
+├── frontend/                   # SPA React + Vite (consome a API)
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js          # Proxy de /api para a API em :8080
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx             # Rotas (React Router)
+│       ├── pages/              # LoginPage, CadastroPage, DashboardPage, MedicamentosPage
+│       ├── components/         # Cabecalho, NavPrincipal
+│       └── services/           # api.js (fetch + Bearer) + auth, catalogo, medicamentos, alertas
+├── lib/                        # Dependências JAR do back-end
+├── sql/
+│   └── database.sql            # DDL completo (carregado pelo Docker no 1º start)
+├── docker-compose.yml          # PostgreSQL para desenvolvimento
+├── .env / .env.example         # Configuração (lida por utils/DotEnv) — .env não versionado
+└── src/main/
+    ├── java/
+    │   ├── Main.java            # Sobe o Tomcat embutido e registra os servlets
+    │   ├── db/                  # ConnectionPool (pool + Proxy) e fachada
+    │   ├── model/               # Entidades e enums
+    │   ├── dao/                 # Acesso a dados
+    │   ├── services/            # Regras de negócio
+    │   ├── servlet/
+    │   │   ├── filter/          # AuthFilter (CORS + JWT) e registrar
+    │   │   ├── AuthServlet.java        # /api/auth/login | cadastrar | logout
+    │   │   ├── DashboardServlet.java   # GET /api/dashboard
+    │   │   └── ...                     # demais recursos da API
+    │   └── utils/
+    │       ├── DotEnv.java      # Leitor do .env (fonte de configuração local)
+    │       ├── JwtUtil.java     # Geração/validação de JWT (HS256)
+    │       ├── CorsConfig.java  # CORS configurável via CORS_ORIGIN
+    │       ├── Hasher.java      # PBKDF2-SHA256
+    │       └── JsonUtil.java    # Serialização/parsing JSON
+    └── webapp/css/style.css
 ```
 
-## Configuração e execução
+## Variáveis de ambiente
+
+Copie `.env.example` para `.env` (na raiz do projeto) e ajuste. A aplicação lê o
+`.env` automaticamente (via `utils.DotEnv`) — **não é preciso exportar variáveis no
+shell**. Uma variável de ambiente do processo, se definida, tem precedência sobre o
+`.env` (útil em produção/Docker).
+
+| Variável | Uso | Padrão |
+|----------|-----|--------|
+| `DB_URL` / `DB_USER` / `DB_PASSWORD` | Conexão com o PostgreSQL (lidas pelo `ConnectionPool`) | — |
+| `JWT_SECRET` | Segredo de assinatura do JWT | _dev fallback (com aviso)_ |
+| `CORS_ORIGIN` | Origens permitidas (lista por vírgula) | `http://localhost:5173` |
+| `POSTGRES_*` | Credenciais do container do docker-compose | ver `.env.example` |
+
+## Como rodar
 
 ### Pré-requisitos
+- Java JDK 11+
+- Docker + Docker Compose (ou um PostgreSQL local)
+- Node.js 18+ (para o front)
 
-- Java JDK 11 ou superior
-- PostgreSQL 13 ou superior
-
-### 1. Banco de dados
-
-#### Opção A — Docker (recomendado)
-
-Sobe um PostgreSQL já com todo o schema criado automaticamente (o `sql/database.sql`
-é executado na primeira inicialização). Requer Docker e Docker Compose.
+### 1. Banco de dados (Docker)
 
 ```bash
-cp .env.example .env   # ajuste as credenciais se quiser
-docker compose up -d
+cp .env.example .env      # ajuste as credenciais se quiser
+docker compose up -d      # sobe o PostgreSQL com o schema já criado
 ```
 
-O banco fica disponível em `localhost:5432` (db `devweb`). Comandos úteis:
+O banco fica disponível na porta definida em `.env` (`POSTGRES_PORT`, padrão `5432`),
+no db `devweb`. Para um PostgreSQL local em vez do Docker, crie o db, rode
+`sql/database.sql` e ajuste `DB_URL/DB_USER/DB_PASSWORD` no `.env`.
 
-```bash
-docker compose logs -f db   # acompanhar a inicialização
-docker compose down         # parar (mantém os dados no volume pgdata)
-docker compose down -v      # parar e apagar os dados (recria o schema no próximo up)
-```
-
-A aplicação lê as credenciais das variáveis de ambiente `DB_URL`, `DB_USER` e
-`DB_PASSWORD` (definidas no `.env`) — não é preciso criar `db.properties`.
-
-#### Opção B — PostgreSQL local
-
-```bash
-psql -U postgres -c "CREATE DATABASE devweb;"
-psql -U postgres -d devweb -f sql/database.sql
-```
-
-Crie o arquivo `src/main/resources/db.properties`:
-
-```properties
-db.url=jdbc:postgresql://localhost:5432/devweb
-db.user=postgres
-db.password=sua_senha
-```
-
-> O `ConnectionPool` prioriza as variáveis de ambiente (`DB_URL`/`DB_USER`/`DB_PASSWORD`)
-> quando presentes e usa o `db.properties` como alternativa.
-
-### 2. Compilação
+### 2. Back-end (API)
 
 ```powershell
+# Compilar (caminhos relativos evitam problemas com espaços no caminho do projeto)
 New-Item -ItemType Directory -Force -Path "out\classes" | Out-Null
-$arquivos = (Get-ChildItem -Recurse -Path "src\main\java" -Filter "*.java").FullName
+$arquivos = Get-ChildItem -Recurse -Path "src\main\java" -Filter "*.java" | Resolve-Path -Relative
 [System.IO.File]::WriteAllLines("sources.txt", $arquivos)
 javac -encoding UTF-8 -cp "lib\*" -d "out\classes" "@sources.txt"
-```
 
-### 3. Execução
-
-```powershell
+# Executar (credenciais e config lidas do .env automaticamente)
 java -cp "out\classes;lib\*" Main
 ```
 
-O servidor sobe em `http://localhost:8080`.
+A API sobe em `http://localhost:8080`.
 
-### 4. Primeiro acesso
+### 3. Front-end (React)
 
-Crie um usuário via API e faça login pelo browser:
-
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8080/api/auth/cadastrar" `
-  -Method POST -ContentType "application/json" `
-  -Body '{"nome":"Seu Nome","email":"seu@email.com","senha":"senha123","data_nascimento":"1995-01-01"}'
+```bash
+cd frontend
+npm install
+npm run dev               # Vite em http://localhost:5173 (proxy para a API)
 ```
 
-Acesse `http://localhost:8080/login` no browser.
+### 4. Testes de API (Bruno)
 
-## Rotas
+Abra a pasta `bruno/` no [Bruno](https://www.usebruno.com/), selecione o ambiente
+**Local** e siga a ordem descrita em `bruno/README.md`. Cobre GET/POST/PUT/DELETE
+de todos os recursos, com o token e os IDs preenchidos automaticamente.
 
-### Páginas (MVC — retornam HTML via JSP)
+## Rotas da API
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `GET` | `/login` | Exibe formulário de login |
-| `POST` | `/login` | Processa credenciais, cria sessão |
-| `GET` | `/dashboard` | Dashboard do usuário logado |
-| `GET` | `/api/auth/logout` | Encerra sessão e limpa cookie |
+Todas retornam JSON. Exceto as públicas, exigem `Authorization: Bearer <token>`.
 
-### API REST (retornam JSON)
-
-| Método | Rota | Autenticação | Descrição |
-|--------|------|-------------|-----------|
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
 | `POST` | `/api/auth/cadastrar` | Pública | Cadastra novo usuário |
-| `POST` | `/api/auth/login` | Pública | Autentica e cria sessão |
-| `GET` | `/api/catalogo` | Sessão | Lista catálogo (ou `?nome=` para busca) |
-| `GET` | `/api/catalogo/{id}` | Sessão | Retorna entrada do catálogo por ID |
-| `POST` | `/api/catalogo` | Sessão | Cadastra medicamento no catálogo |
-| `PUT` | `/api/catalogo/{id}` | Sessão | Atualiza entrada do catálogo |
-| `GET` | `/api/medicamentos?paciente={id}` | Sessão | Lista medicamentos do paciente |
-| `GET` | `/api/medicamentos/{id}` | Sessão | Retorna medicamento por ID |
-| `POST` | `/api/medicamentos` | Sessão | Cadastra medicamento |
-| `PUT` | `/api/medicamentos/{id}` | Sessão | Atualiza dosagem, estoque mínimo, validade, status |
-| `DELETE` | `/api/medicamentos/{id}` | Sessão | Arquiva medicamento |
-| `POST` | `/api/medicamentos/dose` | Sessão | Registra dose tomada |
-| `POST` | `/api/medicamentos/tratamento` | Sessão | Inicia posologia |
-| `GET` | `/api/posologias?medicamento={id}` | Sessão | Lista posologias do medicamento |
-| `DELETE` | `/api/posologias/{id}` | Sessão | Desativa posologia |
-| `GET` | `/api/historico?posologia={id}` | Sessão | Lista histórico de doses |
-| `GET` | `/api/estoque?medicamento={id}` | Sessão | Lista movimentações de estoque |
-| `POST` | `/api/estoque` | Sessão | Registra entrada de estoque |
-| `GET` | `/api/alertas?pessoa={id}` | Sessão | Lista alertas não lidos |
-| `POST` | `/api/alertas/{id}/lido` | Sessão | Marca alerta como lido |
-| `GET` | `/api/vinculos?paciente={id}` | Sessão | Lista vínculos ativos do paciente |
-| `GET` | `/api/vinculos?cuidador={id}` | Sessão | Lista vínculos ativos do cuidador |
-| `POST` | `/api/vinculos` | Sessão + CUIDADOR | Cria vínculo paciente-cuidador |
-| `DELETE` | `/api/vinculos/{id}` | Sessão + CUIDADOR | Encerra vínculo |
+| `POST` | `/api/auth/login` | Pública | Autentica; retorna `{ token, usuario }` |
+| `GET` | `/api/auth/logout` | Bearer | Logout stateless (responde `200`) |
+| `GET` | `/api/dashboard` | Bearer | Resumo conforme o papel (alertas / pacientes) |
+| `GET` | `/api/catalogo` | Bearer | Lista catálogo (ou `?nome=` para busca) |
+| `GET` | `/api/catalogo/{id}` | Bearer | Item do catálogo por ID |
+| `POST` | `/api/catalogo` | Bearer | Cadastra item no catálogo |
+| `PUT` | `/api/catalogo/{id}` | Bearer | Atualiza item do catálogo |
+| `DELETE` | `/api/catalogo/{id}` | Bearer | Exclui item (`409` se houver vínculos) |
+| `GET` | `/api/medicamentos?paciente={id}` | Bearer | Lista medicamentos do paciente |
+| `GET` | `/api/medicamentos/{id}` | Bearer | Medicamento por ID |
+| `POST` | `/api/medicamentos` | Bearer | Cadastra medicamento |
+| `PUT` | `/api/medicamentos/{id}` | Bearer | Atualiza dosagem/estoque/validade/status |
+| `DELETE` | `/api/medicamentos/{id}` | Bearer | Arquiva (`?force=true` exclui) |
+| `POST` | `/api/medicamentos/tratamento` | Bearer | Inicia posologia |
+| `POST` | `/api/medicamentos/dose` | Bearer | Registra dose tomada |
+| `GET` | `/api/posologias?medicamento={id}` | Bearer | Lista posologias |
+| `PUT` | `/api/posologias/{id}` | Bearer | Reativa posologia |
+| `DELETE` | `/api/posologias/{id}` | Bearer | Desativa posologia |
+| `GET` | `/api/estoque?medicamento={id}` | Bearer | Lista movimentações |
+| `POST` | `/api/estoque` | Bearer | Registra movimentação |
+| `GET` | `/api/historico?posologia={id}` | Bearer | Histórico de doses |
+| `GET` | `/api/alertas?pessoa={id}` | Bearer | Alertas não lidos |
+| `POST` | `/api/alertas/{id}/lido` | Bearer | Marca alerta como lido |
+| `GET` | `/api/vinculos?paciente={id}` | Bearer | Vínculos do paciente |
+| `GET` | `/api/vinculos?cuidador={id}` | Bearer | Vínculos do cuidador |
+| `GET` | `/api/vinculos/buscar-paciente?email=` | Bearer | Localiza paciente por e-mail |
+| `POST` | `/api/vinculos` | Bearer + CUIDADOR | Cria vínculo |
+| `DELETE` | `/api/vinculos/{id}` | Bearer + CUIDADOR | Encerra vínculo |
 
 ## Modelo de dados
 
 ### Especialização de Pessoa
-
-`Pessoa` é a entidade base. Um mesmo registro pode existir simultaneamente em `Paciente` e `Cuidador` (especialização parcial e sobreposta). O vínculo entre eles é gerenciado por `PacienteCuidador`, com histórico via `data_fim` e flag `ativo`.
+`Pessoa` é a entidade base. Um mesmo registro pode existir em `Paciente` e `Cuidador`
+(especialização parcial e sobreposta). O vínculo é gerenciado por `PacienteCuidador`,
+com histórico via `data_fim` e flag `ativo`.
 
 ### Controle de estoque
-
-`estoque_atual` em `Medicamento` é derivado — nunca atualizado diretamente. Toda variação passa por `MovimentacaoEstoque`, e a trigger `trg_movimentacao_aplica_estoque` aplica a movimentação com verificação de consistência (optimistic locking via `estoque_antes`).
+`estoque_atual` em `Medicamento` é derivado — nunca atualizado diretamente. Toda
+variação passa por `MovimentacaoEstoque`, e a trigger `trg_movimentacao_aplica_estoque`
+aplica a movimentação com verificação de consistência.
 
 ### Ciclo de vida do medicamento
-
-O status (`EM_USO`, `EM_ESTOQUE`, `DESCARTADO`, `ARQUIVADO`) é mantido automaticamente pela trigger `trg_posologia_status_medicamento`.
+O status (`EM_USO`, `EM_ESTOQUE`, `DESCARTADO`, `ARQUIVADO`) é mantido pela trigger
+`trg_posologia_status_medicamento`.
 
 ## Enums
 

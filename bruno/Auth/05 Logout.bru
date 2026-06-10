@@ -1,0 +1,20 @@
+meta {
+  name: 05 Logout
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/auth/logout
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Logout stateless: o back-end apenas responde 200. O token é descartado no
+  cliente (aqui, manualmente, limpando a variável de ambiente token).
+}

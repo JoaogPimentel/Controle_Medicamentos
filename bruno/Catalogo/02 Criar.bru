@@ -1,0 +1,38 @@
+meta {
+  name: 02 Criar Catalogo
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/catalogo
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nome": "Dipirona 500mg",
+    "principio_ativo": "Dipirona Sódica",
+    "forma_farmaceutica": "COMPRIMIDO"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("idCatalogo", res.getBody().id_catalogo);
+  }
+}
+
+docs {
+  Cria um item de catálogo (201) e salva idCatalogo. forma_farmaceutica deve
+  ser um valor válido do enum (ex.: COMPRIMIDO, CAPSULA, LIQUIDO...).
+}

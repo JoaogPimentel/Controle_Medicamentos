@@ -1,0 +1,20 @@
+meta {
+  name: 07 Arquivar Medicamento
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/medicamentos/{{idMedicamento}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  DELETE sem ?force arquiva o medicamento (status ARQUIVADO). Para excluir
+  permanentemente, use ?force=true na URL.
+}
