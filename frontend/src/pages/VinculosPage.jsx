@@ -22,6 +22,7 @@ export default function VinculosPage() {
     const [pacienteEncontrado, setPacienteEncontrado] = useState(null)
     const [buscando, setBuscando] = useState(false)
     const [carregando, setCarregando] = useState(false)
+    const [filtro, setFiltro] = useState('todos')
     const [feedback, setFeedback] = useState(null)
     const [mostrarForm, setMostrarForm] = useState(false)
     const navigate = useNavigate()
@@ -95,6 +96,11 @@ export default function VinculosPage() {
     if (!usuario) return null
 
     const colunaPessoa = ehCuidador || ehAdmin ? 'Paciente' : 'Cuidador'
+    const vinculosFiltrados = vinculos.filter(v => {
+        if (filtro === 'ativo') return v.ativo
+        if (filtro === 'encerrado') return !v.ativo
+        return true
+    })
 
     return (
         <div>
@@ -176,14 +182,35 @@ export default function VinculosPage() {
                         </div>
                     )}
 
-                    <div style={{ marginTop: '1rem' }}>
+                    {vinculos.length > 0 && !carregando && (
+                        <div style={{ display: 'flex', gap: '.5rem', margin: '1rem 0' }}>
+                            {[
+                                { valor: 'todos', label: 'Todos' },
+                                { valor: 'ativo', label: 'Ativos' },
+                                { valor: 'encerrado', label: 'Encerrados' }
+                            ].map(({ valor, label }) => (
+                                <button
+                                    key={valor}
+                                    onClick={() => setFiltro(valor)}
+                                    className={filtro === valor ? 'btn-primario' : 'btn-secundario'}
+                                    style={{ width: 'auto', padding: '.4rem 1.2rem', fontSize: '.85rem' }}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <div style={{ marginTop: '.5rem' }}>
                         {carregando ? (
                             <p className="vazio">Carregando vínculos…</p>
-                        ) : vinculos.length === 0 ? (
+                        ) : vinculosFiltrados.length === 0 ? (
                             <p className="vazio">
-                                {ehCuidador || ehAdmin
-                                    ? 'Nenhum paciente vinculado. Use o botão acima para vincular.'
-                                    : 'Nenhum cuidador vinculado à sua conta.'}
+                                {vinculos.length === 0
+                                    ? (ehCuidador || ehAdmin
+                                        ? 'Nenhum paciente vinculado. Use o botão acima para vincular.'
+                                        : 'Nenhum cuidador vinculado à sua conta.')
+                                    : `Nenhum vínculo com status "${filtro}".`}
                             </p>
                         ) : (
                             <div className="tabela-wrapper">
@@ -198,7 +225,7 @@ export default function VinculosPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {vinculos.map(v => {
+                                        {vinculosFiltrados.map(v => {
                                             const nome = ehCuidador || ehAdmin ? v.nome_paciente : v.nome_cuidador
                                             const email = ehCuidador || ehAdmin ? v.email_paciente : v.email_cuidador
                                             return (
