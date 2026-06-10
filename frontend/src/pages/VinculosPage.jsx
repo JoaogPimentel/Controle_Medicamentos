@@ -21,6 +21,7 @@ export default function VinculosPage() {
     const [emailBusca, setEmailBusca] = useState('')
     const [pacienteEncontrado, setPacienteEncontrado] = useState(null)
     const [buscando, setBuscando] = useState(false)
+    const [carregando, setCarregando] = useState(false)
     const [feedback, setFeedback] = useState(null)
     const [mostrarForm, setMostrarForm] = useState(false)
     const navigate = useNavigate()
@@ -35,12 +36,15 @@ export default function VinculosPage() {
     }, [])
 
     function carregar() {
+        setCarregando(true)
         const promise = ehCuidador || ehAdmin
             ? buscarVinculosCuidador(usuario.id_pessoa)
             : buscarVinculosPaciente(usuario.id_pessoa)
+
         promise
             .then(data => setVinculos(data))
             .catch(err => mostrarFeedback(err.message, 'erro'))
+            .finally(() => setCarregando(false))
     }
 
     function mostrarFeedback(msg, tipo) {
@@ -96,54 +100,71 @@ export default function VinculosPage() {
         <div>
             <Cabecalho usuario={usuario} />
             <NavPrincipal papel={usuario.papel} />
+
             <main className="conteudo">
                 {feedback && (
                     <div className={feedback.tipo === 'sucesso' ? 'mensagem-sucesso' : 'alerta-erro'}>
                         {feedback.msg}
                     </div>
                 )}
+
                 <div className="card">
                     <div className="card-header">
                         <h2>Vínculos</h2>
                         {(ehCuidador || ehAdmin) && (
-                            <button className="btn-secundario" onClick={() => {
-                                setMostrarForm(prev => !prev)
-                                setPacienteEncontrado(null)
-                                setEmailBusca('')
-                            }}>
+                            <button
+                                className="btn-secundario"
+                                onClick={() => {
+                                    setMostrarForm(prev => !prev)
+                                    setPacienteEncontrado(null)
+                                    setEmailBusca('')
+                                }}
+                            >
                                 {mostrarForm ? '− Cancelar' : '+ Vincular paciente'}
                             </button>
                         )}
                     </div>
+
                     {mostrarForm && (ehCuidador || ehAdmin) && (
                         <div>
                             <hr className="separador" />
                             <p style={{ marginBottom: '1rem', color: '#718096' }}>
-                                Informe o e-mail do paciente que deseja vincular.
+                                Informe o e-mail do paciente que deseja vincular à sua conta de cuidador.
                             </p>
                             <form onSubmit={handleBuscarPaciente} noValidate>
                                 <div className="campos-grade" style={{ alignItems: 'flex-end' }}>
                                     <div className="campo">
                                         <label htmlFor="email-paciente">E-mail do paciente</label>
-                                        <input type="email" id="email-paciente"
+                                        <input
+                                            type="email"
+                                            id="email-paciente"
                                             placeholder="paciente@exemplo.com"
                                             value={emailBusca}
-                                            onChange={e => { setEmailBusca(e.target.value); setPacienteEncontrado(null) }} />
+                                            onChange={e => {
+                                                setEmailBusca(e.target.value)
+                                                setPacienteEncontrado(null)
+                                            }}
+                                        />
                                     </div>
                                     <div className="campo">
-                                        <button type="submit" className="btn-primario"
+                                        <button
+                                            type="submit"
+                                            className="btn-primario"
                                             style={{ width: 'auto', padding: '.6rem 2rem' }}
-                                            disabled={buscando}>
+                                            disabled={buscando}
+                                        >
                                             {buscando ? 'Buscando…' : 'Buscar'}
                                         </button>
                                     </div>
                                 </div>
                             </form>
+
                             {pacienteEncontrado && (
                                 <div className="card" style={{ marginTop: '1rem', background: '#f0fff4', border: '1px solid #9ae6b4' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
-                                            <strong>{pacienteEncontrado.nome}</strong><br />
+                                            <strong>{pacienteEncontrado.nome}</strong>
+                                            <br />
                                             <small style={{ color: '#718096' }}>{pacienteEncontrado.email}</small>
                                         </div>
                                         <button className="btn-primario" onClick={handleCriarVinculo}>
@@ -154,8 +175,11 @@ export default function VinculosPage() {
                             )}
                         </div>
                     )}
+
                     <div style={{ marginTop: '1rem' }}>
-                        {vinculos.length === 0 ? (
+                        {carregando ? (
+                            <p className="vazio">Carregando vínculos…</p>
+                        ) : vinculos.length === 0 ? (
                             <p className="vazio">
                                 {ehCuidador || ehAdmin
                                     ? 'Nenhum paciente vinculado. Use o botão acima para vincular.'
@@ -190,7 +214,10 @@ export default function VinculosPage() {
                                                     {(ehCuidador || ehAdmin) && (
                                                         <td className="acoes">
                                                             {v.ativo && (
-                                                                <button className="btn-perigo" onClick={() => handleEncerrar(v.id_vinculo)}>
+                                                                <button
+                                                                    className="btn-perigo"
+                                                                    onClick={() => handleEncerrar(v.id_vinculo)}
+                                                                >
                                                                     Encerrar
                                                                 </button>
                                                             )}
