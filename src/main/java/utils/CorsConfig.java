@@ -27,7 +27,7 @@ public final class CorsConfig {
 
     private static Set<String> resolverOrigens() {
         Set<String> origens = new LinkedHashSet<>();
-        String env = System.getenv("CORS_ORIGIN");
+        String env = DotEnv.get("CORS_ORIGIN");
         if (env == null || env.isBlank()) {
             origens.add("http://localhost:5173");
         } else {

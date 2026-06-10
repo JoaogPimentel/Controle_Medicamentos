@@ -98,7 +98,10 @@ Controle_Medicamentos/
 
 ## Variáveis de ambiente
 
-Copie `.env.example` para `.env` e ajuste. Resumo:
+Copie `.env.example` para `.env` (na raiz do projeto) e ajuste. A aplicação lê o
+`.env` automaticamente (via `utils.DotEnv`) — **não é preciso exportar variáveis no
+shell**. Uma variável de ambiente do processo, se definida, tem precedência sobre o
+`.env` (útil em produção/Docker).
 
 | Variável | Uso | Padrão |
 |----------|-----|--------|
@@ -121,20 +124,20 @@ cp .env.example .env      # ajuste as credenciais se quiser
 docker compose up -d      # sobe o PostgreSQL com o schema já criado
 ```
 
-O banco fica em `localhost:5432` (db `devweb`). Para um PostgreSQL local em vez do
-Docker, crie o db e rode `sql/database.sql`, definindo `DB_URL/DB_USER/DB_PASSWORD`
-no ambiente (ou `src/main/resources/db.properties`).
+O banco fica disponível na porta definida em `.env` (`POSTGRES_PORT`, padrão `5432`),
+no db `devweb`. Para um PostgreSQL local em vez do Docker, crie o db, rode
+`sql/database.sql` e ajuste `DB_URL/DB_USER/DB_PASSWORD` no `.env`.
 
 ### 2. Back-end (API)
 
 ```powershell
-# Compilar
+# Compilar (caminhos relativos evitam problemas com espaços no caminho do projeto)
 New-Item -ItemType Directory -Force -Path "out\classes" | Out-Null
-$arquivos = (Get-ChildItem -Recurse -Path "src\main\java" -Filter "*.java").FullName
+$arquivos = Get-ChildItem -Recurse -Path "src\main\java" -Filter "*.java" | Resolve-Path -Relative
 [System.IO.File]::WriteAllLines("sources.txt", $arquivos)
 javac -encoding UTF-8 -cp "lib\*" -d "out\classes" "@sources.txt"
 
-# Executar (defina JWT_SECRET e CORS_ORIGIN antes, se desejar)
+# Executar (credenciais e config lidas do .env automaticamente)
 java -cp "out\classes;lib\*" Main
 ```
 

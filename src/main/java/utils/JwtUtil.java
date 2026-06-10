@@ -29,7 +29,7 @@ public class JwtUtil {
     private static final Base64.Decoder DEC = Base64.getUrlDecoder();
 
     private static String resolverSecret() {
-        String s = System.getenv("JWT_SECRET");
+        String s = DotEnv.get("JWT_SECRET");
         if (s == null || s.isBlank()) {
             System.err.println("[AVISO] JWT_SECRET não definido — usando segredo de "
                 + "desenvolvimento. NÃO use este valor em produção.");

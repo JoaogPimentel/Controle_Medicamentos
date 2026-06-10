@@ -1,17 +1,14 @@
 package db;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import utils.DotEnv;
 
 public class ConnectionPool {
 
@@ -37,41 +34,21 @@ public class ConnectionPool {
 
     public static synchronized ConnectionPool getInstance() throws SQLException {
         if (instancia == null) {
-            // Carrega db.properties se existir; caso contrário, segue só com env vars.
-            Properties props = new Properties();
-            File arquivo = new File("src/main/resources/db.properties");
-            if (arquivo.exists()) {
-                try (InputStream in = new FileInputStream(arquivo)) {
-                    props.load(in);
-                } catch (IOException e) {
-                    throw new RuntimeException("Erro ao carregar db.properties", e);
-                }
-            }
-
-            // Variáveis de ambiente (ex.: docker-compose) têm precedência sobre o arquivo.
-            String url      = resolver("DB_URL",      props, "db.url");
-            String user     = resolver("DB_USER",     props, "db.user");
-            String password = resolver("DB_PASSWORD", props, "db.password");
+            // Credenciais vêm do arquivo .env (raiz do projeto); uma variável de
+            // ambiente do processo, se definida, tem precedência sobre o .env.
+            String url      = DotEnv.get("DB_URL");
+            String user     = DotEnv.get("DB_USER");
+            String password = DotEnv.get("DB_PASSWORD");
 
             if (url == null || user == null || password == null) {
                 throw new RuntimeException("Configuração do banco ausente: defina "
-                        + "src/main/resources/db.properties ou as variáveis de ambiente "
-                        + "DB_URL, DB_USER e DB_PASSWORD.");
+                        + "DB_URL, DB_USER e DB_PASSWORD no arquivo .env (raiz do projeto) "
+                        + "ou nas variáveis de ambiente.");
             }
 
             instancia = new ConnectionPool(url, user, password);
         }
         return instancia;
-    }
-
-    /** Resolve um valor priorizando a variável de ambiente sobre o db.properties. */
-    private static String resolver(String envVar, Properties props, String chaveProps) {
-        String env = System.getenv(envVar);
-        if (env != null && !env.trim().isEmpty()) {
-            return env.trim();
-        }
-        String valor = props.getProperty(chaveProps);
-        return valor != null ? valor.trim() : null;
     }
 
     public Connection getConnection() throws SQLException {
