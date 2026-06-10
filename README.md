@@ -5,7 +5,6 @@ posologia, histórico de doses e alertas. O projeto é dividido em uma **API RES
 desacoplada** (Java + Jakarta Servlets) e um **front-end SPA** (React + Vite) que
 a consome via HTTP, autenticando-se por **JWT**.
 
-> Link do front publicado (GitHub Pages): _a preencher_
 
 ## Tecnologias
 
@@ -69,26 +68,36 @@ React (Vite / GitHub Pages)
 
 ```
 Controle_Medicamentos/
-├── bruno/                  # Collection Bruno de testes da API (ver bruno/README.md)
-├── frontend/               # SPA React + Vite (consome a API)
-├── lib/                    # Dependências JAR do back-end
+├── bruno/                      # Collection Bruno de testes da API (ver bruno/README.md)
+├── frontend/                   # SPA React + Vite (consome a API)
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js          # Proxy de /api para a API em :8080
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx             # Rotas (React Router)
+│       ├── pages/              # LoginPage, CadastroPage, DashboardPage, MedicamentosPage
+│       ├── components/         # Cabecalho, NavPrincipal
+│       └── services/           # api.js (fetch + Bearer) + auth, catalogo, medicamentos, alertas
+├── lib/                        # Dependências JAR do back-end
 ├── sql/
-│   └── database.sql        # DDL completo (carregado pelo Docker no 1º start)
-├── docker-compose.yml      # PostgreSQL para desenvolvimento
-├── .env.example            # Modelo de variáveis de ambiente
+│   └── database.sql            # DDL completo (carregado pelo Docker no 1º start)
+├── docker-compose.yml          # PostgreSQL para desenvolvimento
+├── .env / .env.example         # Configuração (lida por utils/DotEnv) — .env não versionado
 └── src/main/
     ├── java/
-    │   ├── Main.java        # Sobe o Tomcat embutido e registra os servlets
-    │   ├── db/              # ConnectionPool (pool + Proxy) e fachada
-    │   ├── model/           # Entidades e enums
-    │   ├── dao/             # Acesso a dados
-    │   ├── services/        # Regras de negócio
+    │   ├── Main.java            # Sobe o Tomcat embutido e registra os servlets
+    │   ├── db/                  # ConnectionPool (pool + Proxy) e fachada
+    │   ├── model/               # Entidades e enums
+    │   ├── dao/                 # Acesso a dados
+    │   ├── services/            # Regras de negócio
     │   ├── servlet/
-    │   │   ├── filter/      # AuthFilter (CORS + JWT) e registrar
+    │   │   ├── filter/          # AuthFilter (CORS + JWT) e registrar
     │   │   ├── AuthServlet.java        # /api/auth/login | cadastrar | logout
     │   │   ├── DashboardServlet.java   # GET /api/dashboard
     │   │   └── ...                     # demais recursos da API
     │   └── utils/
+    │       ├── DotEnv.java      # Leitor do .env (fonte de configuração local)
     │       ├── JwtUtil.java     # Geração/validação de JWT (HS256)
     │       ├── CorsConfig.java  # CORS configurável via CORS_ORIGIN
     │       ├── Hasher.java      # PBKDF2-SHA256
