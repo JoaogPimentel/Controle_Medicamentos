@@ -1,3 +1,10 @@
+export async function buscarItemCatalogo(id) {
+    const res = await fetch(`/api/catalogo/${id}`)
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.erro || 'Erro ao buscar item do catálogo')
+    return data
+}
+
 export async function buscarCatalogo() {
     const res = await fetch('/api/catalogo')
     const data = await res.json()
