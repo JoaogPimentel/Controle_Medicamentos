@@ -8,9 +8,10 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.UsuarioSessao;
+import utils.CorsConfig;
 import utils.JsonUtil;
+import utils.JwtUtil;
 
 import java.io.IOException;
 import java.util.Set;
@@ -18,8 +19,6 @@ import java.util.Set;
 public class AuthFilter implements Filter {
 
     private static final Set<String> ROTAS_PUBLICAS = Set.of(
-        "/login",
-        "/cadastro",
         "/api/auth/login",
         "/api/auth/cadastrar"
     );
@@ -33,6 +32,15 @@ public class AuthFilter implements Filter {
 
         HttpServletRequest  req  = (HttpServletRequest)  request;
         HttpServletResponse resp = (HttpServletResponse) response;
+
+        // CORS: ecoa a origem permitida em toda resposta e responde o preflight
+        // OPTIONS antes da checagem de auth (o browser não envia token no preflight).
+        CorsConfig.aplicar(req, resp);
+        if (CorsConfig.isPreflight(req)) {
+            CorsConfig.aplicarPreflight(resp);
+            resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            return;
+        }
 
         String caminho = req.getRequestURI()
                            .substring(req.getContextPath().length());
@@ -48,26 +56,35 @@ public class AuthFilter implements Filter {
         resp.setHeader("Pragma", "no-cache");
         resp.setDateHeader("Expires", 0);
 
-        HttpSession    sessao  = req.getSession(false);
-        UsuarioSessao  usuario = (sessao != null)
-                                 ? (UsuarioSessao) sessao.getAttribute(servlet.AuthServlet.ATTR_USUARIO)
-                                 : null;
+        UsuarioSessao usuario = JwtUtil.validar(extrairToken(req));
 
         if (usuario == null) {
-            if (caminho.startsWith("/api/")) {
-                JsonUtil.send(resp, HttpServletResponse.SC_UNAUTHORIZED,
-                    JsonUtil.error("Não autenticado. Faça login em /api/auth/login."));
-            } else {
-                resp.sendRedirect(req.getContextPath() + "/login");
-            }
+            // Back-end é uma API pura: sem token válido, responde 401 JSON
+            // (não há mais página de login para redirecionar).
+            JsonUtil.send(resp, HttpServletResponse.SC_UNAUTHORIZED,
+                JsonUtil.error("Não autenticado. Faça login em /api/auth/login."));
             return;
         }
 
+        // Publica o usuário do token no request para os servlets consumirem.
+        req.setAttribute(servlet.AuthServlet.ATTR_USUARIO, usuario);
         chain.doFilter(request, response);
     }
 
     @Override
     public void destroy() {}
+
+    /** Extrai o token do header {@code Authorization: Bearer <token>}; null se ausente. */
+    private String extrairToken(HttpServletRequest req) {
+        String header = req.getHeader("Authorization");
+        if (header == null) return null;
+        header = header.trim();
+        if (header.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            String token = header.substring(7).trim();
+            return token.isEmpty() ? null : token;
+        }
+        return null;
+    }
 
     private boolean ehPublico(String caminho) {
         return ROTAS_PUBLICAS.contains(caminho)

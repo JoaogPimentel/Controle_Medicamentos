@@ -1,0 +1,19 @@
+meta {
+  name: 04 Encerrar Vinculo
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/vinculos/{{idVinculo}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Encerra (desativa) o vínculo pelo id. Exige token de CUIDADOR.
+}

@@ -1,0 +1,19 @@
+meta {
+  name: 03 Buscar Medicamento por ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/medicamentos/{{idMedicamento}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Busca um medicamento pelo id. Retorna 404 se não existir.
+}

@@ -1,0 +1,19 @@
+meta {
+  name: 02 Marcar como lido
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/alertas/{{idAlerta}}/lido
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Marca o alerta como lido. Requer idAlerta (capturado em "Alertas > Listar").
+}

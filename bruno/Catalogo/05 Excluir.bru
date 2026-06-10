@@ -1,0 +1,20 @@
+meta {
+  name: 05 Excluir Catalogo
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/catalogo/{{idCatalogo}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Exclui o item de catálogo. Retorna 409 se houver medicamentos vinculados a ele
+  (rode esta exclusão antes de criar medicamentos, ou use outro item).
+}

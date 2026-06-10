@@ -1,19 +1,21 @@
+import { apiFetch } from './api'
+
 export async function buscarMedicamento(id) {
-    const res = await fetch(`/api/medicamentos/${id}`)
+    const res = await apiFetch(`/api/medicamentos/${id}`)
     const data = await res.json()
     if (!res.ok) throw new Error(data.erro || 'Erro ao buscar medicamento')
     return data
 }
 
 export async function buscarMedicamentos(idPaciente) {
-    const res = await fetch(`/api/medicamentos?paciente=${idPaciente}`)
+    const res = await apiFetch(`/api/medicamentos?paciente=${idPaciente}`)
     const data = await res.json()
     if (!res.ok) throw new Error(data.erro || 'Erro ao buscar medicamentos')
     return data
 }
 
 export async function adicionarMedicamento(body) {
-    const res = await fetch('/api/medicamentos', {
+    const res = await apiFetch('/api/medicamentos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -24,14 +26,14 @@ export async function adicionarMedicamento(body) {
 }
 
 export async function arquivar(id) {
-    const res = await fetch(`/api/medicamentos/${id}`, { method: 'DELETE' })
+    const res = await apiFetch(`/api/medicamentos/${id}`, { method: 'DELETE' })
     const data = await res.json()
     if (!res.ok) throw new Error(data.erro || 'Erro ao arquivar')
     return data
 }
 
 export async function desarquivar(id) {
-    const res = await fetch(`/api/medicamentos/${id}`, {
+    const res = await apiFetch(`/api/medicamentos/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'EM_ESTOQUE' })
@@ -42,7 +44,7 @@ export async function desarquivar(id) {
 }
 
 export async function excluir(id) {
-    const res = await fetch(`/api/medicamentos/${id}?force=true`, { method: 'DELETE' })
+    const res = await apiFetch(`/api/medicamentos/${id}?force=true`, { method: 'DELETE' })
     const data = await res.json()
     if (!res.ok) throw new Error(data.erro || 'Erro ao excluir')
     return data

@@ -1,0 +1,20 @@
+meta {
+  name: 01 Resumo do Dashboard
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/dashboard
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Resumo do dashboard conforme o papel do token: paciente recebe seus alertas
+  não lidos; cuidador recebe seus pacientes com a contagem de alertas.
+}

@@ -63,7 +63,6 @@ public class JsonUtil {
     public static void send(HttpServletResponse resp, int status, String json) throws IOException {
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
-        resp.setHeader("Access-Control-Allow-Origin", "*");
         resp.setStatus(status);
         PrintWriter out = resp.getWriter();
         out.write(json);

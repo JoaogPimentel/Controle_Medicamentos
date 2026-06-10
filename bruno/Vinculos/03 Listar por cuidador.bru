@@ -1,0 +1,24 @@
+meta {
+  name: 03 Listar por cuidador
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/vinculos?cuidador={{idCuidador}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  cuidador: {{idCuidador}}
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Lista os vínculos do cuidador (inclui nome do paciente). Também aceita
+  ?paciente={id} para listar os cuidadores de um paciente.
+}

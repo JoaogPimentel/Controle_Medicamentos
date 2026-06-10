@@ -1,3 +1,5 @@
+import { apiFetch, setToken, clearAuth } from './api'
+
 export async function login(email, senha) {
     const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -6,8 +8,11 @@ export async function login(email, senha) {
     })
     const data = await res.json()
     if (!res.ok) throw new Error(data.erro || 'Erro ao fazer login')
-    localStorage.setItem('usuario', JSON.stringify(data))
-    return data
+    // Resposta JWT: { token, usuario }. Guarda o token e o usuário separados —
+    // as páginas continuam lendo `localStorage.usuario` como objeto do usuário.
+    setToken(data.token)
+    localStorage.setItem('usuario', JSON.stringify(data.usuario))
+    return data.usuario
 }
 
 export async function cadastrar(body) {
@@ -22,7 +27,13 @@ export async function cadastrar(body) {
 }
 
 export async function logout() {
-    await fetch('/api/auth/logout')
-    localStorage.removeItem('usuario')
+    // Auth stateless: o logout é best-effort. Mesmo que a chamada falhe,
+    // limpamos o token no cliente.
+    try {
+        await apiFetch('/api/auth/logout')
+    } catch {
+        // sessão já pode estar expirada; segue limpando
+    }
+    clearAuth()
     localStorage.removeItem('emailSalvo')
 }

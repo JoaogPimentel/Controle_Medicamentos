@@ -1,0 +1,34 @@
+meta {
+  name: 01 Movimentar Estoque
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/estoque
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id_medicamento": {{idMedicamento}},
+    "quantidade": 20,
+    "tipo": "ENTRADA_COMPRA",
+    "observacao": "Compra de reposição"
+  }
+}
+
+docs {
+  Registra uma movimentação de estoque. tipo deve ser um valor do enum
+  TipoMovimentacao: ENTRADA_COMPRA, ENTRADA_AJUSTE, SAIDA_DOSE, SAIDA_AJUSTE
+  ou SAIDA_DESCARTE. Atualiza o estoque do medicamento.
+}

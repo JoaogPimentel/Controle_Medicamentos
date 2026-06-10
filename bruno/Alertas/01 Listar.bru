@@ -1,0 +1,33 @@
+meta {
+  name: 01 Listar Alertas
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/alertas?pessoa={{idPaciente}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  pessoa: {{idPaciente}}
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const lista = res.getBody();
+    if (Array.isArray(lista) && lista.length > 0) {
+      bru.setEnvVar("idAlerta", lista[0].id_alerta);
+    }
+  }
+}
+
+docs {
+  Lista os alertas não lidos da pessoa e salva idAlerta (primeiro da lista).
+  Os alertas são gerados pelo sistema (ex.: estoque baixo, validade próxima).
+}

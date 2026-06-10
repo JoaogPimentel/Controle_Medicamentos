@@ -1,0 +1,19 @@
+meta {
+  name: 03 Reativar Posologia
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/posologias/{{idPosologia}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  Reativa uma posologia previamente desativada. Retorna 200.
+}

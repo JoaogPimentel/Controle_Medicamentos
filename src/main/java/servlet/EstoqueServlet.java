@@ -50,7 +50,7 @@ public class EstoqueServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
-            UsuarioSessao usuario = (UsuarioSessao) req.getSession(false).getAttribute(AuthServlet.ATTR_USUARIO);
+            UsuarioSessao usuario = AuthServlet.usuarioAtual(req);
             String body = JsonUtil.readBody(req);
             Integer idMedicamento = JsonUtil.getInt(body, "id_medicamento");
             int idResponsavel = usuario.getIdPessoa();
