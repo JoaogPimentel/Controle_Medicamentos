@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import CadastroPage from './pages/CadastroPage'
 import DashboardPage from './pages/DashboardPage'
@@ -8,11 +8,10 @@ import PosologiaPage from './pages/PosologiaPage'
 import EstoquePage from './pages/EstoquePage'
 import HistoricoPage from './pages/HistoricoPage'
 import VinculosPage from './pages/VinculosPage'
-import PerfilPage from './pages/PerfilPage'
 
 export default function App() {
     return (
-        <BrowserRouter>
+        <HashRouter>
             <Routes>
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<LoginPage />} />
@@ -24,8 +23,7 @@ export default function App() {
                 <Route path="/estoque" element={<EstoquePage />} />
                 <Route path="/historico" element={<HistoricoPage />} />
                 <Route path="/vinculos" element={<VinculosPage />} />
-                <Route path="/perfil" element={<PerfilPage />} />
             </Routes>
-        </BrowserRouter>
+        </HashRouter>
     )
 }
