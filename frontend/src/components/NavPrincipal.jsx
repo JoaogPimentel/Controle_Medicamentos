@@ -14,9 +14,8 @@ export default function NavPrincipal({ papel }) {
                 <Link to="/medicamentos" className={ativo('/medicamentos')}>Medicamentos</Link>
             )}
             <Link to="/catalogo" className={ativo('/catalogo')}>Catálogo</Link>
-            {papel === 'CUIDADOR' && (
-                <Link to="/vinculos" className={ativo('/vinculos')}>Vínculos</Link>
-            )}
+            <Link to="/vinculos" className={ativo('/vinculos')}>Vínculos</Link>
+            <Link to="/perfil" className={ativo('/perfil')}>Perfil</Link>
         </nav>
     )
 }

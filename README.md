@@ -228,3 +228,19 @@ O status (`EM_USO`, `EM_ESTOQUE`, `DESCARTADO`, `ARQUIVADO`) é mantido pela tri
 | `TipoAlerta` | `DOSE_PROXIMA`, `DOSE_ATRASADA`, `ESTOQUE_BAIXO`, `ESTOQUE_ZERADO`, `VENCIMENTO_PROXIMO` |
 | `TipoMovimentacao` | `ENTRADA_COMPRA`, `ENTRADA_AJUSTE`, `SAIDA_DOSE`, `SAIDA_AJUSTE`, `SAIDA_DESCARTE` |
 | `RolePessoa` | `PACIENTE`, `CUIDADOR`, `ADMIN` |
+
+---
+
+## Módulos desenvolvidos por Lucas Ardelino
+
+### Banco de Dados (`sql/database.sql`)
+Modelagem completa do banco: tabelas com herança (`pessoa → paciente/cuidador`), triggers de auditoria, views para consultas frequentes e índices de performance.
+
+### Módulo de Vínculos (`frontend/src/`)
+- `services/vinculos.js` — serviço com todas as chamadas à API REST de vínculos (GET, POST, DELETE)
+- `pages/VinculosPage.jsx` — página completa com lógica de papel (CUIDADOR cria/encerra vínculos; PACIENTE visualiza cuidadores), busca por e-mail, indicador de carregamento e filtro por status
+
+### Módulo de Perfil (`frontend/src/`)
+- `services/perfil.js` — serviço para buscar e atualizar dados do perfil via API
+- `pages/PerfilPage.jsx` — página de perfil do usuário logado com formulário de edição de nome
+- `components/NavPrincipal.jsx` — adicionados links de Vínculos (todos os papéis) e Perfil na navegação
