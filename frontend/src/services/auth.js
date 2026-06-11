@@ -1,7 +1,7 @@
-import { apiFetch, setToken, clearAuth } from './api'
+import { apiFetch, setToken, clearAuth, API_BASE } from './api'
 
 export async function login(email, senha) {
-    const res = await fetch('/api/auth/login', {
+    const res = await fetch(API_BASE + '/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, senha })
@@ -16,7 +16,7 @@ export async function login(email, senha) {
 }
 
 export async function cadastrar(body) {
-    const res = await fetch('/api/auth/cadastrar', {
+    const res = await fetch(API_BASE + '/api/auth/cadastrar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

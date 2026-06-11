@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Cabecalho from '../components/Cabecalho'
 import NavPrincipal from '../components/NavPrincipal'
+import Card from '../components/Card'
+import Campo from '../components/Campo'
+import Botao from '../components/Botao'
+import Feedback from '../components/Feedback'
 import { buscarPerfil, atualizarPerfil } from '../services/perfil'
 
 const PAPEL_LABEL = {
@@ -65,22 +69,16 @@ export default function PerfilPage() {
             <NavPrincipal papel={usuario.papel} />
 
             <main className="conteudo">
-                {feedback && (
-                    <div className={feedback.tipo === 'sucesso' ? 'mensagem-sucesso' : 'alerta-erro'}>
-                        {feedback.msg}
-                    </div>
-                )}
+                <Feedback tipo={feedback?.tipo}>{feedback?.msg}</Feedback>
 
-                <div className="card">
-                    <div className="card-header">
-                        <h2>Meu Perfil</h2>
-                        {!editando && (
-                            <button className="btn-secundario" onClick={() => setEditando(true)}>
-                                Editar nome
-                            </button>
-                        )}
-                    </div>
-
+                <Card
+                    titulo="Meu Perfil"
+                    acao={!editando && (
+                        <Botao variante="secundario" onClick={() => setEditando(true)}>
+                            Editar nome
+                        </Botao>
+                    )}
+                >
                     <div className="campos-grade">
                         <div className="campo">
                             <label>E-mail</label>
@@ -99,34 +97,17 @@ export default function PerfilPage() {
                     {editando ? (
                         <form onSubmit={handleSalvar} noValidate>
                             <div className="campos-grade" style={{ alignItems: 'flex-end' }}>
-                                <div className="campo">
-                                    <label htmlFor="nome">Nome completo</label>
-                                    <input
-                                        type="text"
-                                        id="nome"
-                                        value={nome}
-                                        onChange={e => setNome(e.target.value)}
-                                        required
-                                    />
-                                </div>
+                                <Campo label="Nome completo" type="text" id="nome"
+                                    value={nome} onChange={e => setNome(e.target.value)} required />
                             </div>
                             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                <button
-                                    type="submit"
-                                    className="btn-primario"
-                                    style={{ width: 'auto' }}
-                                    disabled={salvando}
-                                >
+                                <Botao type="submit" style={{ width: 'auto' }} disabled={salvando}>
                                     {salvando ? 'Salvando…' : 'Salvar'}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn-secundario"
-                                    style={{ width: 'auto' }}
-                                    onClick={() => { setEditando(false); setNome(perfil.nome) }}
-                                >
+                                </Botao>
+                                <Botao type="button" variante="secundario" style={{ width: 'auto' }}
+                                    onClick={() => { setEditando(false); setNome(perfil.nome) }}>
                                     Cancelar
-                                </button>
+                                </Botao>
                             </div>
                         </form>
                     ) : (
@@ -137,7 +118,7 @@ export default function PerfilPage() {
                             </p>
                         </div>
                     )}
-                </div>
+                </Card>
             </main>
         </div>
     )

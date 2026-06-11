@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import Cabecalho from '../components/Cabecalho'
 import NavPrincipal from '../components/NavPrincipal'
+import Card from '../components/Card'
+import Campo from '../components/Campo'
+import Botao from '../components/Botao'
+import Feedback from '../components/Feedback'
+import Tabela from '../components/Tabela'
 import { buscarPosologias, iniciarTratamento, desativarPosologia, reativarPosologia } from '../services/posologia'
 import { buscarMedicamento } from '../services/medicamentos'
 import { buscarItemCatalogo } from '../services/catalogo'
@@ -118,112 +123,81 @@ export default function PosologiaPage() {
             </div>
 
             <main className="conteudo">
-                {feedback && (
-                    <div className={feedback.tipo === 'sucesso' ? 'mensagem-sucesso' : 'alerta-erro'}>
-                        {feedback.msg}
-                    </div>
-                )}
+                <Feedback tipo={feedback?.tipo}>{feedback?.msg}</Feedback>
 
                 {infoMed && (
-                    <div className="card">
-                        <h2>{infoMed.nomeCatalogo || 'Posologias'}</h2>
+                    <Card titulo={infoMed.nomeCatalogo || 'Posologias'}>
                         <div className="info-bar">
                             <div className="info-item"><strong>{infoMed.dosagem}</strong>Dosagem</div>
                             <div className="info-item"><strong>{infoMed.estoque_atual}</strong>Estoque atual</div>
                             <div className="info-item"><strong>{statusMedLabel[infoMed.status] || infoMed.status}</strong>Status</div>
                         </div>
-                    </div>
+                    </Card>
                 )}
 
-                <div className="card">
-                    <div className="card-header">
-                        <h2>Posologias</h2>
-                        <button className="btn-secundario" onClick={() => setMostrarForm(prev => !prev)}>
+                <Card
+                    titulo="Posologias"
+                    acao={
+                        <Botao variante="secundario" onClick={() => setMostrarForm(prev => !prev)}>
                             {mostrarForm ? '− Cancelar' : '+ Iniciar tratamento'}
-                        </button>
-                    </div>
-
+                        </Botao>
+                    }
+                >
                     {mostrarForm && (
                         <div>
                             <hr className="separador" />
                             <form onSubmit={handleIniciar} noValidate>
                                 <div className="campos-grade">
-                                    <div className="campo">
-                                        <label htmlFor="horario">Horário da 1ª dose</label>
-                                        <input type="time" id="horario" value={horario} onChange={e => setHorario(e.target.value)} />
-                                    </div>
-                                    <div className="campo">
-                                        <label htmlFor="intervalo">Intervalo entre doses (h)</label>
-                                        <input type="number" id="intervalo" min="1" max="168" placeholder="Ex: 8"
-                                            value={intervalo} onChange={e => setIntervalo(e.target.value)} />
-                                    </div>
-                                    <div className="campo">
-                                        <label htmlFor="qtd-dose">Quantidade por dose</label>
-                                        <input type="number" id="qtd-dose" min="0.1" step="0.1" placeholder="Ex: 1"
-                                            value={qtdDose} onChange={e => setQtdDose(e.target.value)} />
-                                    </div>
-                                    <div className="campo">
-                                        <label htmlFor="duracao">Duração (dias, opcional)</label>
-                                        <input type="number" id="duracao" min="1" placeholder="Deixe vazio para contínuo"
-                                            value={duracao} onChange={e => setDuracao(e.target.value)} />
-                                    </div>
-                                    <div className="campo">
-                                        <label htmlFor="data-inicio">Data de início</label>
-                                        <input type="date" id="data-inicio" value={dataInicio} onChange={e => setDataInicio(e.target.value)} />
-                                    </div>
+                                    <Campo label="Horário da 1ª dose" type="time" id="horario"
+                                        value={horario} onChange={e => setHorario(e.target.value)} />
+                                    <Campo label="Intervalo entre doses (h)" type="number" id="intervalo"
+                                        min="1" max="168" placeholder="Ex: 8"
+                                        value={intervalo} onChange={e => setIntervalo(e.target.value)} />
+                                    <Campo label="Quantidade por dose" type="number" id="qtd-dose"
+                                        min="0.1" step="0.1" placeholder="Ex: 1"
+                                        value={qtdDose} onChange={e => setQtdDose(e.target.value)} />
+                                    <Campo label="Duração (dias, opcional)" type="number" id="duracao"
+                                        min="1" placeholder="Deixe vazio para contínuo"
+                                        value={duracao} onChange={e => setDuracao(e.target.value)} />
+                                    <Campo label="Data de início" type="date" id="data-inicio"
+                                        value={dataInicio} onChange={e => setDataInicio(e.target.value)} />
                                 </div>
-                                <button type="submit" className="btn-primario" style={{ width: 'auto', padding: '.6rem 2rem' }}>
+                                <Botao type="submit" style={{ width: 'auto', padding: '.6rem 2rem' }}>
                                     Iniciar
-                                </button>
+                                </Botao>
                             </form>
                         </div>
                     )}
 
                     <div style={{ marginTop: '1rem' }}>
-                        {posologias.length === 0 ? (
-                            <p className="vazio">Nenhuma posologia cadastrada.</p>
-                        ) : (
-                            <div className="tabela-wrapper">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>1ª Dose</th>
-                                            <th>Intervalo</th>
-                                            <th>Qtd/dose</th>
-                                            <th>Duração</th>
-                                            <th>Início</th>
-                                            <th>Status</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {posologias.map(p => (
-                                            <tr key={p.id_posologia}>
-                                                <td>{p.horario_primeira_dose}</td>
-                                                <td>A cada {p.intervalo_horas}h</td>
-                                                <td>{p.quantidade_por_dose}</td>
-                                                <td>{p.duracao_dias ? p.duracao_dias + ' dias' : 'Contínuo'}</td>
-                                                <td>{p.data_inicio.substring(0, 10)}</td>
-                                                <td>
-                                                    <span className={`tag-status ${p.ativo ? 'tag-ativo' : 'tag-inativo'}`}>
-                                                        {p.ativo ? 'Ativo' : 'Inativo'}
-                                                    </span>
-                                                </td>
-                                                <td className="acoes">
-                                                    <Link to={`/historico?posologia=${p.id_posologia}&medicamento=${idMedicamento}`} className="btn-secundario">Histórico</Link>
-                                                    {p.ativo
-                                                        ? <button className="btn-perigo" onClick={() => handleDesativar(p.id_posologia)}>Desativar</button>
-                                                        : <button className="btn-secundario" onClick={() => handleReativar(p.id_posologia)}>Reativar</button>
-                                                    }
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                        <Tabela
+                            colunas={[
+                                { chave: 'dose', titulo: '1ª Dose', render: p => p.horario_primeira_dose },
+                                { chave: 'intervalo', titulo: 'Intervalo', render: p => `A cada ${p.intervalo_horas}h` },
+                                { chave: 'qtd', titulo: 'Qtd/dose', render: p => p.quantidade_por_dose },
+                                { chave: 'duracao', titulo: 'Duração', render: p => p.duracao_dias ? `${p.duracao_dias} dias` : 'Contínuo' },
+                                { chave: 'inicio', titulo: 'Início', render: p => p.data_inicio.substring(0, 10) },
+                                { chave: 'status', titulo: 'Status', render: p => (
+                                    <span className={`tag-status ${p.ativo ? 'tag-ativo' : 'tag-inativo'}`}>
+                                        {p.ativo ? 'Ativo' : 'Inativo'}
+                                    </span>
+                                ) },
+                                { chave: 'acoes', titulo: 'Ações', className: 'acoes', render: p => (
+                                    <>
+                                        <Link to={`/historico?posologia=${p.id_posologia}&medicamento=${idMedicamento}`} className="btn-secundario">Histórico</Link>
+                                        {p.ativo
+                                            ? <Botao variante="perigo" onClick={() => handleDesativar(p.id_posologia)}>Desativar</Botao>
+                                            : <Botao variante="secundario" onClick={() => handleReativar(p.id_posologia)}>Reativar</Botao>
+                                        }
+                                    </>
+                                ) },
+                            ]}
+                            dados={posologias}
+                            chaveLinha="id_posologia"
+                            vazio="Nenhuma posologia cadastrada."
+                        />
                     </div>
-                </div>
+                </Card>
             </main>
         </div>
     )

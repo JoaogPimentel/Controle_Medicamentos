@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Cabecalho from '../components/Cabecalho'
 import NavPrincipal from '../components/NavPrincipal'
+import Card from '../components/Card'
+import Botao from '../components/Botao'
 import { buscarAlertas, marcarComoLido } from '../services/alertas'
 
 export default function DashboardPage() {
@@ -42,14 +44,12 @@ export default function DashboardPage() {
             <NavPrincipal papel={usuario.papel} />
 
             <main className="conteudo">
-                <section className="card">
-                    <h2>
-                        Alertas não lidos
-                        {alertas.length > 0 && (
-                            <span className="badge-count">{alertas.length}</span>
-                        )}
-                    </h2>
-
+                <Card titulo={<>
+                    Alertas não lidos
+                    {alertas.length > 0 && (
+                        <span className="badge-count">{alertas.length}</span>
+                    )}
+                </>}>
                     {alertas.length === 0 ? (
                         <p className="vazio">Nenhum alerta pendente.</p>
                     ) : (
@@ -60,18 +60,15 @@ export default function DashboardPage() {
                                     <span className="mensagem-alerta">{a.mensagem}</span>
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '.3rem' }}>
                                         <small className="data-alerta">{a.data_geracao}</small>
-                                        <button
-                                            className="btn-secundario"
-                                            onClick={() => handleMarcarLido(a.id_alerta)}
-                                        >
+                                        <Botao variante="secundario" onClick={() => handleMarcarLido(a.id_alerta)}>
                                             Marcar como lido
-                                        </button>
+                                        </Botao>
                                     </div>
                                 </li>
                             ))}
                         </ul>
                     )}
-                </section>
+                </Card>
             </main>
         </div>
     )

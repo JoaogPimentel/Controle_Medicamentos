@@ -1,6 +1,13 @@
 // Cliente HTTP central da API. Centraliza o envio do token JWT em todas as
 // chamadas autenticadas e o tratamento de sessão expirada (401).
 
+// Origem da API. Em dev fica vazio (''), então as chamadas usam caminhos
+// relativos (`/api/...`) que o proxy do Vite encaminha para :8080. No build de
+// produção (GitHub Pages), `VITE_API_BASE` aponta para a API — ex.:
+// `http://localhost:8080`. localhost é exceção ao bloqueio de mixed-content,
+// então funciona mesmo a partir de uma página HTTPS.
+export const API_BASE = import.meta.env.VITE_API_BASE || ''
+
 const TOKEN_KEY = 'token'
 const USUARIO_KEY = 'usuario'
 
@@ -27,7 +34,7 @@ export async function apiFetch(url, options = {}) {
     const token = getToken()
     if (token) headers['Authorization'] = `Bearer ${token}`
 
-    const res = await fetch(url, { ...options, headers })
+    const res = await fetch(API_BASE + url, { ...options, headers })
 
     if (res.status === 401) {
         clearAuth()
