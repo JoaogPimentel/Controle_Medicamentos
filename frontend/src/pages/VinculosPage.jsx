@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Cabecalho from '../components/Cabecalho'
 import NavPrincipal from '../components/NavPrincipal'
+import Card from '../components/Card'
+import Campo from '../components/Campo'
+import Botao from '../components/Botao'
+import Feedback from '../components/Feedback'
+import Tabela from '../components/Tabela'
+import Carregando from '../components/Carregando'
 import {
     buscarVinculosCuidador,
     buscarVinculosPaciente,
@@ -102,35 +108,53 @@ export default function VinculosPage() {
         return true
     })
 
+    const colunasVinculos = [
+        { chave: 'pessoa', titulo: colunaPessoa, render: v => (
+            <strong>{(ehCuidador || ehAdmin ? v.nome_paciente : v.nome_cuidador) || '—'}</strong>
+        ) },
+        { chave: 'email', titulo: 'E-mail', render: v => (ehCuidador || ehAdmin ? v.email_paciente : v.email_cuidador) || '—' },
+        { chave: 'desde', titulo: 'Vinculado desde', render: v => formatarData(v.data_vinculo) },
+        { chave: 'status', titulo: 'Status', render: v => (
+            <span className={`tag-status ${v.ativo ? 'tag-ativo' : 'tag-inativo'}`}>
+                {v.ativo ? 'Ativo' : 'Encerrado'}
+            </span>
+        ) },
+    ]
+    if (ehCuidador || ehAdmin) {
+        colunasVinculos.push({ chave: 'acoes', titulo: 'Ações', className: 'acoes', render: v => (
+            v.ativo && <Botao variante="perigo" onClick={() => handleEncerrar(v.id_vinculo)}>Encerrar</Botao>
+        ) })
+    }
+
+    const vazioVinculos = vinculos.length === 0
+        ? (ehCuidador || ehAdmin
+            ? 'Nenhum paciente vinculado. Use o botão acima para vincular.'
+            : 'Nenhum cuidador vinculado à sua conta.')
+        : `Nenhum vínculo com status "${filtro}".`
+
     return (
         <div>
             <Cabecalho usuario={usuario} />
             <NavPrincipal papel={usuario.papel} />
 
             <main className="conteudo">
-                {feedback && (
-                    <div className={feedback.tipo === 'sucesso' ? 'mensagem-sucesso' : 'alerta-erro'}>
-                        {feedback.msg}
-                    </div>
-                )}
+                <Feedback tipo={feedback?.tipo}>{feedback?.msg}</Feedback>
 
-                <div className="card">
-                    <div className="card-header">
-                        <h2>Vínculos</h2>
-                        {(ehCuidador || ehAdmin) && (
-                            <button
-                                className="btn-secundario"
-                                onClick={() => {
-                                    setMostrarForm(prev => !prev)
-                                    setPacienteEncontrado(null)
-                                    setEmailBusca('')
-                                }}
-                            >
-                                {mostrarForm ? '− Cancelar' : '+ Vincular paciente'}
-                            </button>
-                        )}
-                    </div>
-
+                <Card
+                    titulo="Vínculos"
+                    acao={(ehCuidador || ehAdmin) && (
+                        <Botao
+                            variante="secundario"
+                            onClick={() => {
+                                setMostrarForm(prev => !prev)
+                                setPacienteEncontrado(null)
+                                setEmailBusca('')
+                            }}
+                        >
+                            {mostrarForm ? '− Cancelar' : '+ Vincular paciente'}
+                        </Botao>
+                    )}
+                >
                     {mostrarForm && (ehCuidador || ehAdmin) && (
                         <div>
                             <hr className="separador" />
@@ -139,28 +163,21 @@ export default function VinculosPage() {
                             </p>
                             <form onSubmit={handleBuscarPaciente} noValidate>
                                 <div className="campos-grade" style={{ alignItems: 'flex-end' }}>
+                                    <Campo
+                                        label="E-mail do paciente"
+                                        type="email"
+                                        id="email-paciente"
+                                        placeholder="paciente@exemplo.com"
+                                        value={emailBusca}
+                                        onChange={e => {
+                                            setEmailBusca(e.target.value)
+                                            setPacienteEncontrado(null)
+                                        }}
+                                    />
                                     <div className="campo">
-                                        <label htmlFor="email-paciente">E-mail do paciente</label>
-                                        <input
-                                            type="email"
-                                            id="email-paciente"
-                                            placeholder="paciente@exemplo.com"
-                                            value={emailBusca}
-                                            onChange={e => {
-                                                setEmailBusca(e.target.value)
-                                                setPacienteEncontrado(null)
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="campo">
-                                        <button
-                                            type="submit"
-                                            className="btn-primario"
-                                            style={{ width: 'auto', padding: '.6rem 2rem' }}
-                                            disabled={buscando}
-                                        >
+                                        <Botao type="submit" style={{ width: 'auto', padding: '.6rem 2rem' }} disabled={buscando}>
                                             {buscando ? 'Buscando…' : 'Buscar'}
-                                        </button>
+                                        </Botao>
                                     </div>
                                 </div>
                             </form>
@@ -173,9 +190,9 @@ export default function VinculosPage() {
                                             <br />
                                             <small style={{ color: '#718096' }}>{pacienteEncontrado.email}</small>
                                         </div>
-                                        <button className="btn-primario" onClick={handleCriarVinculo}>
+                                        <Botao onClick={handleCriarVinculo}>
                                             Confirmar vínculo
-                                        </button>
+                                        </Botao>
                                     </div>
                                 </div>
                             )}
@@ -189,76 +206,31 @@ export default function VinculosPage() {
                                 { valor: 'ativo', label: 'Ativos' },
                                 { valor: 'encerrado', label: 'Encerrados' }
                             ].map(({ valor, label }) => (
-                                <button
+                                <Botao
                                     key={valor}
+                                    variante={filtro === valor ? 'primario' : 'secundario'}
                                     onClick={() => setFiltro(valor)}
-                                    className={filtro === valor ? 'btn-primario' : 'btn-secundario'}
                                     style={{ width: 'auto', padding: '.4rem 1.2rem', fontSize: '.85rem' }}
                                 >
                                     {label}
-                                </button>
+                                </Botao>
                             ))}
                         </div>
                     )}
 
                     <div style={{ marginTop: '.5rem' }}>
                         {carregando ? (
-                            <p className="vazio">Carregando vínculos…</p>
-                        ) : vinculosFiltrados.length === 0 ? (
-                            <p className="vazio">
-                                {vinculos.length === 0
-                                    ? (ehCuidador || ehAdmin
-                                        ? 'Nenhum paciente vinculado. Use o botão acima para vincular.'
-                                        : 'Nenhum cuidador vinculado à sua conta.')
-                                    : `Nenhum vínculo com status "${filtro}".`}
-                            </p>
+                            <Carregando>Carregando vínculos…</Carregando>
                         ) : (
-                            <div className="tabela-wrapper">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>{colunaPessoa}</th>
-                                            <th>E-mail</th>
-                                            <th>Vinculado desde</th>
-                                            <th>Status</th>
-                                            {(ehCuidador || ehAdmin) && <th>Ações</th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {vinculosFiltrados.map(v => {
-                                            const nome = ehCuidador || ehAdmin ? v.nome_paciente : v.nome_cuidador
-                                            const email = ehCuidador || ehAdmin ? v.email_paciente : v.email_cuidador
-                                            return (
-                                                <tr key={v.id_vinculo}>
-                                                    <td><strong>{nome || '—'}</strong></td>
-                                                    <td>{email || '—'}</td>
-                                                    <td>{formatarData(v.data_vinculo)}</td>
-                                                    <td>
-                                                        <span className={`tag-status ${v.ativo ? 'tag-ativo' : 'tag-inativo'}`}>
-                                                            {v.ativo ? 'Ativo' : 'Encerrado'}
-                                                        </span>
-                                                    </td>
-                                                    {(ehCuidador || ehAdmin) && (
-                                                        <td className="acoes">
-                                                            {v.ativo && (
-                                                                <button
-                                                                    className="btn-perigo"
-                                                                    onClick={() => handleEncerrar(v.id_vinculo)}
-                                                                >
-                                                                    Encerrar
-                                                                </button>
-                                                            )}
-                                                        </td>
-                                                    )}
-                                                </tr>
-                                            )
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <Tabela
+                                colunas={colunasVinculos}
+                                dados={vinculosFiltrados}
+                                chaveLinha="id_vinculo"
+                                vazio={vazioVinculos}
+                            />
                         )}
                     </div>
-                </div>
+                </Card>
             </main>
         </div>
     )

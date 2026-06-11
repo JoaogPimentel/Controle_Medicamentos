@@ -5,6 +5,13 @@ posologia, histórico de doses e alertas. O projeto é dividido em uma **API RES
 desacoplada** (Java + Jakarta Servlets) e um **front-end SPA** (React + Vite) que
 a consome via HTTP, autenticando-se por **JWT**.
 
+🔗 **Front-end hospedado (GitHub Pages):** https://joaogpimentel.github.io/Controle_Medicamentos/
+
+> ⚠️ A API Java roda **localmente**. Para o front hospedado funcionar, suba a API
+> (`cd backend && docker compose up -d`) e inclua a URL do Pages em `CORS_ORIGIN`.
+> O navegador permite que uma página HTTPS chame `http://localhost` (exceção ao
+> bloqueio de *mixed-content*), por isso o build do Pages aponta para `localhost:8080`.
+
 
 ## Tecnologias
 

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { login } from '../services/auth'
+import Campo from '../components/Campo'
+import Botao from '../components/Botao'
+import Feedback from '../components/Feedback'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -50,34 +53,30 @@ export default function LoginPage() {
                 <h1>MediControl</h1>
                 <p className="subtitulo">Controle de Medicamentos</p>
 
-                {erro && <div className="alerta-erro">{erro}</div>}
+                <Feedback tipo="erro">{erro}</Feedback>
 
                 <form onSubmit={handleSubmit} noValidate>
-                    <div className="campo">
-                        <label htmlFor="email">E-mail</label>
-                        <input
-                            type="email"
-                            id="email"
-                            placeholder="seu@email.com"
-                            autoComplete="email"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
+                    <Campo
+                        label="E-mail"
+                        type="email"
+                        id="email"
+                        placeholder="seu@email.com"
+                        autoComplete="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        required
+                    />
 
-                    <div className="campo">
-                        <label htmlFor="senha">Senha</label>
-                        <input
-                            type="password"
-                            id="senha"
-                            placeholder="••••••"
-                            autoComplete="current-password"
-                            value={senha}
-                            onChange={e => setSenha(e.target.value)}
-                            required
-                        />
-                    </div>
+                    <Campo
+                        label="Senha"
+                        type="password"
+                        id="senha"
+                        placeholder="••••••"
+                        autoComplete="current-password"
+                        value={senha}
+                        onChange={e => setSenha(e.target.value)}
+                        required
+                    />
 
                     <label className="lembrar">
                         <input
@@ -88,7 +87,7 @@ export default function LoginPage() {
                         Lembrar meu e-mail
                     </label>
 
-                    <button type="submit" className="btn-primario">Entrar</button>
+                    <Botao type="submit">Entrar</Botao>
                 </form>
 
                 <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '.875rem', color: '#718096' }}>

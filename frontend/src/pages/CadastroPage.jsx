@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { cadastrar } from '../services/auth'
+import Campo from '../components/Campo'
+import Botao from '../components/Botao'
+import Feedback from '../components/Feedback'
 
 export default function CadastroPage() {
     const [role, setRole] = useState('PACIENTE')
@@ -64,47 +67,30 @@ export default function CadastroPage() {
                 <h1>MediControl</h1>
                 <p className="subtitulo">Criar conta</p>
 
-                {erro && <div className="alerta-erro">{erro}</div>}
-                {sucesso && <div className="mensagem-sucesso">{sucesso}</div>}
+                <Feedback tipo="erro">{erro}</Feedback>
+                <Feedback tipo="sucesso">{sucesso}</Feedback>
 
                 <form onSubmit={handleSubmit} noValidate>
-                    <div className="campo">
-                        <label htmlFor="role">Tipo de conta</label>
-                        <select id="role" value={role} onChange={e => alternarRole(e.target.value)}>
-                            <option value="PACIENTE">Paciente</option>
-                            <option value="CUIDADOR">Cuidador</option>
-                        </select>
-                    </div>
+                    <Campo as="select" label="Tipo de conta" id="role"
+                        value={role} onChange={e => alternarRole(e.target.value)}>
+                        <option value="PACIENTE">Paciente</option>
+                        <option value="CUIDADOR">Cuidador</option>
+                    </Campo>
 
-                    <div className="campo">
-                        <label htmlFor="nome">Nome completo</label>
-                        <input type="text" id="nome" placeholder="Seu nome" autoComplete="name"
-                            value={nome} onChange={e => setNome(e.target.value)} />
-                    </div>
+                    <Campo label="Nome completo" type="text" id="nome" placeholder="Seu nome"
+                        autoComplete="name" value={nome} onChange={e => setNome(e.target.value)} />
 
-                    <div className="campo">
-                        <label htmlFor="email">E-mail</label>
-                        <input type="email" id="email" placeholder="seu@email.com" autoComplete="email"
-                            value={email} onChange={e => setEmail(e.target.value)} />
-                    </div>
+                    <Campo label="E-mail" type="email" id="email" placeholder="seu@email.com"
+                        autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} />
 
-                    <div className="campo">
-                        <label htmlFor="senha">Senha</label>
-                        <input type="password" id="senha" placeholder="Mínimo 6 caracteres" autoComplete="new-password"
-                            value={senha} onChange={e => setSenha(e.target.value)} />
-                    </div>
+                    <Campo label="Senha" type="password" id="senha" placeholder="Mínimo 6 caracteres"
+                        autoComplete="new-password" value={senha} onChange={e => setSenha(e.target.value)} />
 
-                    <div className="campo">
-                        <label htmlFor="dataNascimento">Data de nascimento</label>
-                        <input type="date" id="dataNascimento"
-                            value={dataNascimento} onChange={e => setDataNascimento(e.target.value)} />
-                    </div>
+                    <Campo label="Data de nascimento" type="date" id="dataNascimento"
+                        value={dataNascimento} onChange={e => setDataNascimento(e.target.value)} />
 
-                    <div className="campo">
-                        <label htmlFor="telefone">Telefone (opcional)</label>
-                        <input type="tel" id="telefone" placeholder="(11) 99999-9999"
-                            value={telefone} onChange={e => setTelefone(e.target.value)} />
-                    </div>
+                    <Campo label="Telefone (opcional)" type="tel" id="telefone" placeholder="(11) 99999-9999"
+                        value={telefone} onChange={e => setTelefone(e.target.value)} />
 
                     {role === 'CUIDADOR' && (
                         <div id="campos-cuidador">
@@ -118,20 +104,16 @@ export default function CadastroPage() {
                             </label>
 
                             {isProfissional && (
-                                <div className="campo">
-                                    <label htmlFor="registroProfissional">
-                                        Registro profissional <span style={{ color: '#e53e3e' }}>*</span>
-                                    </label>
-                                    <input type="text" id="registroProfissional"
-                                        placeholder="Ex: CRM 12345 / COREN 98765"
-                                        value={registroProfissional}
-                                        onChange={e => setRegistroProfissional(e.target.value)} />
-                                </div>
+                                <Campo label={<>Registro profissional <span style={{ color: '#e53e3e' }}>*</span></>}
+                                    type="text" id="registroProfissional"
+                                    placeholder="Ex: CRM 12345 / COREN 98765"
+                                    value={registroProfissional}
+                                    onChange={e => setRegistroProfissional(e.target.value)} />
                             )}
                         </div>
                     )}
 
-                    <button type="submit" className="btn-primario">Criar conta</button>
+                    <Botao type="submit">Criar conta</Botao>
                 </form>
 
                 <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '.875rem', color: '#718096' }}>

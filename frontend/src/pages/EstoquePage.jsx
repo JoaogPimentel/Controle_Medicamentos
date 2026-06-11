@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import Cabecalho from '../components/Cabecalho'
 import NavPrincipal from '../components/NavPrincipal'
+import Card from '../components/Card'
+import Campo from '../components/Campo'
+import Botao from '../components/Botao'
+import Feedback from '../components/Feedback'
+import Tabela from '../components/Tabela'
 import { buscarEstoque, registrarEntrada } from '../services/estoque'
 import { buscarMedicamento } from '../services/medicamentos'
 import { buscarItemCatalogo } from '../services/catalogo'
@@ -101,101 +106,75 @@ export default function EstoquePage() {
             </div>
 
             <main className="conteudo">
-                {feedback && (
-                    <div className={feedback.tipo === 'sucesso' ? 'mensagem-sucesso' : 'alerta-erro'}>
-                        {feedback.msg}
-                    </div>
-                )}
+                <Feedback tipo={feedback?.tipo}>{feedback?.msg}</Feedback>
 
                 {infoMed && (
-                    <div className="card">
+                    <Card>
                         <div className="info-bar">
                             <div className="info-item"><strong>{infoMed.nomeCatalogo || '—'}</strong>Medicamento</div>
                             <div className="info-item"><strong>{infoMed.estoque_atual}</strong>Estoque atual</div>
                             <div className="info-item"><strong>{infoMed.estoque_minimo}</strong>Estoque mínimo</div>
                             <div className="info-item"><strong>{statusMedLabel[infoMed.status] || infoMed.status}</strong>Status</div>
                         </div>
-                    </div>
+                    </Card>
                 )}
 
-                <div className="card">
-                    <div className="card-header">
-                        <h2>Movimentações de estoque</h2>
-                        <button className="btn-secundario" onClick={() => setMostrarForm(prev => !prev)}>
+                <Card
+                    titulo="Movimentações de estoque"
+                    acao={
+                        <Botao variante="secundario" onClick={() => setMostrarForm(prev => !prev)}>
                             {mostrarForm ? '− Cancelar' : '+ Registrar entrada'}
-                        </button>
-                    </div>
-
+                        </Botao>
+                    }
+                >
                     {mostrarForm && (
                         <div>
                             <hr className="separador" />
                             <form onSubmit={handleRegistrar} noValidate>
                                 <div className="campos-grade">
-                                    <div className="campo">
-                                        <label htmlFor="tipo">Tipo de entrada</label>
-                                        <select id="tipo" value={tipo} onChange={e => setTipo(e.target.value)}>
-                                            <option value="ENTRADA_COMPRA">Compra</option>
-                                            <option value="ENTRADA_AJUSTE">Ajuste</option>
-                                        </select>
-                                    </div>
-                                    <div className="campo">
-                                        <label htmlFor="quantidade">Quantidade</label>
-                                        <input type="number" id="quantidade" step="0.1" placeholder="Ex: 30 ou -10"
-                                            value={quantidade} onChange={e => setQuantidade(e.target.value)} />
-                                    </div>
-                                    <div className="campo">
-                                        <label htmlFor="observacao">Observação (opcional)</label>
-                                        <input type="text" id="observacao" placeholder="Ex: Caixa com 30 comprimidos"
-                                            value={observacao} onChange={e => setObservacao(e.target.value)} />
-                                    </div>
+                                    <Campo as="select" label="Tipo de entrada" id="tipo"
+                                        value={tipo} onChange={e => setTipo(e.target.value)}>
+                                        <option value="ENTRADA_COMPRA">Compra</option>
+                                        <option value="ENTRADA_AJUSTE">Ajuste</option>
+                                    </Campo>
+                                    <Campo label="Quantidade" type="number" id="quantidade" step="0.1"
+                                        placeholder="Ex: 30 ou -10"
+                                        value={quantidade} onChange={e => setQuantidade(e.target.value)} />
+                                    <Campo label="Observação (opcional)" type="text" id="observacao"
+                                        placeholder="Ex: Caixa com 30 comprimidos"
+                                        value={observacao} onChange={e => setObservacao(e.target.value)} />
                                 </div>
-                                <button type="submit" className="btn-primario" style={{ width: 'auto', padding: '.6rem 2rem' }}>
+                                <Botao type="submit" style={{ width: 'auto', padding: '.6rem 2rem' }}>
                                     Registrar
-                                </button>
+                                </Botao>
                             </form>
                         </div>
                     )}
 
                     <div style={{ marginTop: '1rem' }}>
-                        {movimentacoes.length === 0 ? (
-                            <p className="vazio">Nenhuma movimentação registrada.</p>
-                        ) : (
-                            <div className="tabela-wrapper">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Data</th>
-                                            <th>Tipo</th>
-                                            <th>Quantidade</th>
-                                            <th>Antes</th>
-                                            <th>Depois</th>
-                                            <th>Observação</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {movimentacoes.map(mov => {
-                                            const isEntrada = mov.tipo.startsWith('ENTRADA')
-                                            return (
-                                                <tr key={mov.id_movimentacao}>
-                                                    <td>{formatarData(mov.data_movimentacao)}</td>
-                                                    <td>{tipoLabel[mov.tipo] || mov.tipo}</td>
-                                                    <td style={{ fontWeight: 600, color: isEntrada ? '#276749' : '#c53030' }}>
-                                                        {isEntrada ? '+' : '-'}{mov.quantidade}
-                                                    </td>
-                                                    <td>{mov.estoque_antes}</td>
-                                                    <td>{mov.estoque_depois}</td>
-                                                    <td style={{ color: mov.observacao ? undefined : '#a0aec0' }}>
-                                                        {mov.observacao || '—'}
-                                                    </td>
-                                                </tr>
-                                            )
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                        <Tabela
+                            colunas={[
+                                { chave: 'data', titulo: 'Data', render: m => formatarData(m.data_movimentacao) },
+                                { chave: 'tipo', titulo: 'Tipo', render: m => tipoLabel[m.tipo] || m.tipo },
+                                { chave: 'qtd', titulo: 'Quantidade', render: m => (
+                                    <span style={{ fontWeight: 600, color: m.tipo.startsWith('ENTRADA') ? '#276749' : '#c53030' }}>
+                                        {m.tipo.startsWith('ENTRADA') ? '+' : '-'}{m.quantidade}
+                                    </span>
+                                ) },
+                                { chave: 'antes', titulo: 'Antes', render: m => m.estoque_antes },
+                                { chave: 'depois', titulo: 'Depois', render: m => m.estoque_depois },
+                                { chave: 'obs', titulo: 'Observação', render: m => (
+                                    <span style={{ color: m.observacao ? undefined : '#a0aec0' }}>
+                                        {m.observacao || '—'}
+                                    </span>
+                                ) },
+                            ]}
+                            dados={movimentacoes}
+                            chaveLinha="id_movimentacao"
+                            vazio="Nenhuma movimentação registrada."
+                        />
                     </div>
-                </div>
+                </Card>
             </main>
         </div>
     )

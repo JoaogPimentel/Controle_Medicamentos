@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import Cabecalho from '../components/Cabecalho'
 import NavPrincipal from '../components/NavPrincipal'
+import Card from '../components/Card'
+import Campo from '../components/Campo'
+import Botao from '../components/Botao'
+import Feedback from '../components/Feedback'
+import Tabela from '../components/Tabela'
 import { buscarHistorico, registrarDose } from '../services/historico'
 
 const statusDoseLabel = { TOMADA: 'Tomada', ATRASADA: 'Atrasada', PREVISTA: 'Prevista', PULADA: 'Pulada' }
@@ -73,71 +78,52 @@ export default function HistoricoPage() {
             </div>
 
             <main className="conteudo">
-                {feedback && (
-                    <div className={feedback.tipo === 'sucesso' ? 'mensagem-sucesso' : 'alerta-erro'}>
-                        {feedback.msg}
-                    </div>
-                )}
+                <Feedback tipo={feedback?.tipo}>{feedback?.msg}</Feedback>
 
-                <div className="card">
-                    <div className="card-header">
-                        <h2>Histórico de doses</h2>
-                        <button className="btn-secundario" onClick={() => setMostrarForm(prev => !prev)}>
+                <Card
+                    titulo="Histórico de doses"
+                    acao={
+                        <Botao variante="secundario" onClick={() => setMostrarForm(prev => !prev)}>
                             {mostrarForm ? '− Cancelar' : '+ Registrar dose'}
-                        </button>
-                    </div>
-
+                        </Botao>
+                    }
+                >
                     {mostrarForm && (
                         <div>
                             <hr className="separador" />
                             <form onSubmit={handleRegistrarDose} noValidate>
                                 <div className="campos-grade" style={{ maxWidth: '400px' }}>
-                                    <div className="campo">
-                                        <label htmlFor="observacao">Observação (opcional)</label>
-                                        <input type="text" id="observacao" placeholder="Ex: Tomado com alimento"
-                                            value={observacao} onChange={e => setObservacao(e.target.value)} />
-                                    </div>
+                                    <Campo label="Observação (opcional)" type="text" id="observacao"
+                                        placeholder="Ex: Tomado com alimento"
+                                        value={observacao} onChange={e => setObservacao(e.target.value)} />
                                 </div>
-                                <button type="submit" className="btn-primario" style={{ width: 'auto', padding: '.6rem 2rem' }}>
+                                <Botao type="submit" style={{ width: 'auto', padding: '.6rem 2rem' }}>
                                     Registrar
-                                </button>
+                                </Botao>
                             </form>
                         </div>
                     )}
 
                     <div style={{ marginTop: '1rem' }}>
-                        {historico.length === 0 ? (
-                            <p className="vazio">Nenhum registro de dose encontrado.</p>
-                        ) : (
-                            <div className="tabela-wrapper">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Data / Hora</th>
-                                            <th>Status</th>
-                                            <th>Observação</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {historico.map((h, i) => (
-                                            <tr key={i}>
-                                                <td>{formatarData(h.data_hora)}</td>
-                                                <td>
-                                                    <span className={`tag-status tag-${h.status}`}>
-                                                        {statusDoseLabel[h.status] || h.status}
-                                                    </span>
-                                                </td>
-                                                <td style={{ color: h.observacao ? undefined : '#a0aec0' }}>
-                                                    {h.observacao || '—'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                        <Tabela
+                            colunas={[
+                                { chave: 'data', titulo: 'Data / Hora', render: h => formatarData(h.data_hora) },
+                                { chave: 'status', titulo: 'Status', render: h => (
+                                    <span className={`tag-status tag-${h.status}`}>
+                                        {statusDoseLabel[h.status] || h.status}
+                                    </span>
+                                ) },
+                                { chave: 'obs', titulo: 'Observação', render: h => (
+                                    <span style={{ color: h.observacao ? undefined : '#a0aec0' }}>
+                                        {h.observacao || '—'}
+                                    </span>
+                                ) },
+                            ]}
+                            dados={historico}
+                            vazio="Nenhum registro de dose encontrado."
+                        />
                     </div>
-                </div>
+                </Card>
             </main>
         </div>
     )

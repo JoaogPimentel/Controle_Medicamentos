@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Cabecalho from '../components/Cabecalho'
 import NavPrincipal from '../components/NavPrincipal'
+import Card from '../components/Card'
+import Campo from '../components/Campo'
+import Botao from '../components/Botao'
+import Feedback from '../components/Feedback'
+import Tabela from '../components/Tabela'
 import { buscarCatalogo, adicionarCatalogo, editarCatalogo, excluirCatalogo } from '../services/catalogo'
 
 const formaLabel = {
@@ -117,127 +122,87 @@ export default function CatalogoPage() {
             <NavPrincipal papel={usuario.papel} />
 
             <main className="conteudo">
-                {feedback && (
-                    <div className={feedback.tipo === 'sucesso' ? 'mensagem-sucesso' : 'alerta-erro'}>
-                        {feedback.msg}
-                    </div>
-                )}
+                <Feedback tipo={feedback?.tipo}>{feedback?.msg}</Feedback>
 
-                <div className="card">
-                    <div className="card-header">
-                        <h2>Catálogo de Medicamentos</h2>
-                        <button className="btn-secundario" onClick={() => setMostrarForm(prev => !prev)}>
+                <Card
+                    titulo="Catálogo de Medicamentos"
+                    acao={
+                        <Botao variante="secundario" onClick={() => setMostrarForm(prev => !prev)}>
                             {mostrarForm ? '− Cancelar' : '+ Adicionar'}
-                        </button>
-                    </div>
-
+                        </Botao>
+                    }
+                >
                     {mostrarForm && (
                         <div>
                             <hr className="separador" />
                             <form onSubmit={handleAdicionar} noValidate>
                                 <div className="campos-grade">
-                                    <div className="campo">
-                                        <label htmlFor="nome">Nome</label>
-                                        <input type="text" id="nome" placeholder="Ex: Paracetamol 500mg"
-                                            value={nome} onChange={e => setNome(e.target.value)} />
-                                    </div>
-                                    <div className="campo">
-                                        <label htmlFor="principio-ativo">Princípio ativo</label>
-                                        <input type="text" id="principio-ativo" placeholder="Ex: Paracetamol"
-                                            value={princAti} onChange={e => setPrincAti(e.target.value)} />
-                                    </div>
-                                    <div className="campo">
-                                        <label htmlFor="forma">Forma farmacêutica</label>
-                                        <select id="forma" value={forma} onChange={e => setForma(e.target.value)}>
-                                            <option value="">Selecione...</option>
-                                            {formasDisponiveis.map(([val, label]) => (
-                                                <option key={val} value={val}>{label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                    <Campo label="Nome" type="text" id="nome" placeholder="Ex: Paracetamol 500mg"
+                                        value={nome} onChange={e => setNome(e.target.value)} />
+                                    <Campo label="Princípio ativo" type="text" id="principio-ativo" placeholder="Ex: Paracetamol"
+                                        value={princAti} onChange={e => setPrincAti(e.target.value)} />
+                                    <Campo as="select" label="Forma farmacêutica" id="forma"
+                                        value={forma} onChange={e => setForma(e.target.value)}>
+                                        <option value="">Selecione...</option>
+                                        {formasDisponiveis.map(([val, label]) => (
+                                            <option key={val} value={val}>{label}</option>
+                                        ))}
+                                    </Campo>
                                 </div>
-                                <button type="submit" className="btn-primario" style={{ width: 'auto', padding: '.6rem 2rem' }}>
+                                <Botao type="submit" style={{ width: 'auto', padding: '.6rem 2rem' }}>
                                     Salvar
-                                </button>
+                                </Botao>
                             </form>
                         </div>
                     )}
 
                     <hr className="separador" />
 
-                    <div className="campo" style={{ maxWidth: '300px', marginBottom: '1rem' }}>
-                        <label htmlFor="busca">Buscar por nome</label>
-                        <input type="text" id="busca" placeholder="Digite para filtrar..."
+                    <div style={{ maxWidth: '300px', marginBottom: '1rem' }}>
+                        <Campo label="Buscar por nome" type="text" id="busca" placeholder="Digite para filtrar..."
                             value={busca} onChange={e => setBusca(e.target.value)} />
                     </div>
 
-                    {listaFiltrada.length === 0 ? (
-                        <p className="vazio">Nenhum item encontrado.</p>
-                    ) : (
-                        <div className="tabela-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Nome</th>
-                                        <th>Princípio ativo</th>
-                                        <th>Forma farmacêutica</th>
-                                        <th>Cadastro</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {listaFiltrada.map(c => (
-                                        <tr key={c.id_catalogo}>
-                                            <td><strong>{c.nome}</strong></td>
-                                            <td>{c.principio_ativo}</td>
-                                            <td>{formaLabel[c.forma_farmaceutica] || c.forma_farmaceutica}</td>
-                                            <td>{c.data_cadastro ? c.data_cadastro.substring(0, 10) : '—'}</td>
-                                            <td className="acoes">
-                                                <button className="btn-secundario" onClick={() => abrirEdicao(c)}>Editar</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
+                    <Tabela
+                        colunas={[
+                            { chave: 'nome', titulo: 'Nome', render: c => <strong>{c.nome}</strong> },
+                            { chave: 'principio', titulo: 'Princípio ativo', render: c => c.principio_ativo },
+                            { chave: 'forma', titulo: 'Forma farmacêutica', render: c => formaLabel[c.forma_farmaceutica] || c.forma_farmaceutica },
+                            { chave: 'cadastro', titulo: 'Cadastro', render: c => c.data_cadastro ? c.data_cadastro.substring(0, 10) : '—' },
+                            { chave: 'acoes', titulo: 'Ações', className: 'acoes', render: c => (
+                                <Botao variante="secundario" onClick={() => abrirEdicao(c)}>Editar</Botao>
+                            ) },
+                        ]}
+                        dados={listaFiltrada}
+                        chaveLinha="id_catalogo"
+                    />
+                </Card>
 
                 {editando && (
-                    <div className="card" ref={refEdicao}>
-                        <h2>Editar entrada do catálogo</h2>
+                    <Card ref={refEdicao} titulo="Editar entrada do catálogo">
                         <form onSubmit={handleSalvarEdicao} noValidate>
                             <div className="campos-grade">
-                                <div className="campo">
-                                    <label htmlFor="edit-nome">Nome</label>
-                                    <input type="text" id="edit-nome"
-                                        value={editando.nome}
-                                        onChange={e => setEditando(prev => ({ ...prev, nome: e.target.value }))} />
-                                </div>
-                                <div className="campo">
-                                    <label htmlFor="edit-principio">Princípio ativo</label>
-                                    <input type="text" id="edit-principio"
-                                        value={editando.principio_ativo}
-                                        onChange={e => setEditando(prev => ({ ...prev, principio_ativo: e.target.value }))} />
-                                </div>
-                                <div className="campo">
-                                    <label htmlFor="edit-forma">Forma farmacêutica</label>
-                                    <select id="edit-forma"
-                                        value={editando.forma_farmaceutica}
-                                        onChange={e => setEditando(prev => ({ ...prev, forma_farmaceutica: e.target.value }))}>
-                                        {formasDisponiveis.map(([val, label]) => (
-                                            <option key={val} value={val}>{label}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <Campo label="Nome" type="text" id="edit-nome"
+                                    value={editando.nome}
+                                    onChange={e => setEditando(prev => ({ ...prev, nome: e.target.value }))} />
+                                <Campo label="Princípio ativo" type="text" id="edit-principio"
+                                    value={editando.principio_ativo}
+                                    onChange={e => setEditando(prev => ({ ...prev, principio_ativo: e.target.value }))} />
+                                <Campo as="select" label="Forma farmacêutica" id="edit-forma"
+                                    value={editando.forma_farmaceutica}
+                                    onChange={e => setEditando(prev => ({ ...prev, forma_farmaceutica: e.target.value }))}>
+                                    {formasDisponiveis.map(([val, label]) => (
+                                        <option key={val} value={val}>{label}</option>
+                                    ))}
+                                </Campo>
                             </div>
                             <div style={{ display: 'flex', gap: '.5rem' }}>
-                                <button type="submit" className="btn-primario" style={{ width: 'auto', padding: '.6rem 2rem' }}>Salvar</button>
-                                <button type="button" className="btn-secundario" onClick={fecharEdicao}>Cancelar</button>
-                                <button type="button" className="btn-perigo" style={{ width: 'auto', padding: '.6rem 2rem', marginLeft: 'auto' }} onClick={handleExcluir}>Excluir</button>
+                                <Botao type="submit" style={{ width: 'auto', padding: '.6rem 2rem' }}>Salvar</Botao>
+                                <Botao type="button" variante="secundario" onClick={fecharEdicao}>Cancelar</Botao>
+                                <Botao type="button" variante="perigo" style={{ width: 'auto', padding: '.6rem 2rem', marginLeft: 'auto' }} onClick={handleExcluir}>Excluir</Botao>
                             </div>
                         </form>
-                    </div>
+                    </Card>
                 )}
             </main>
         </div>
