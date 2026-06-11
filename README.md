@@ -66,51 +66,59 @@ React (Vite / GitHub Pages)
 
 ## Estrutura do projeto
 
+Arquitetura desacoplada em duas pastas distintas: **`backend/`** (API Java) e
+**`frontend/`** (React, publicado no GitHub Pages).
+
 ```
 Controle_Medicamentos/
-├── bruno/                      # Collection Bruno de testes da API (ver bruno/README.md)
+├── .github/workflows/          # CI: deploy automático do front no GitHub Pages
 ├── frontend/                   # SPA React + Vite (consome a API)
 │   ├── index.html
 │   ├── package.json
-│   ├── vite.config.js          # Proxy de /api para a API em :8080
+│   ├── vite.config.js          # base /Controle_Medicamentos/ no build; proxy /api em dev
 │   └── src/
 │       ├── main.jsx
-│       ├── App.jsx             # Rotas (React Router)
-│       ├── pages/              # LoginPage, CadastroPage, DashboardPage, MedicamentosPage
+│       ├── App.jsx             # Rotas (HashRouter)
+│       ├── pages/              # Login, Cadastro, Dashboard, Medicamentos, Catalogo,
+│       │                       #   Posologia, Estoque, Historico, Vinculos, Perfil
 │       ├── components/         # Cabecalho, NavPrincipal
-│       └── services/           # api.js (fetch + Bearer) + auth, catalogo, medicamentos, alertas
-├── lib/                        # Dependências JAR do back-end
-├── sql/
-│   └── database.sql            # DDL completo (carregado pelo Docker no 1º start)
-├── docker-compose.yml          # PostgreSQL para desenvolvimento
-├── .env / .env.example         # Configuração (lida por utils/DotEnv) — .env não versionado
-└── src/main/
-    ├── java/
-    │   ├── Main.java            # Sobe o Tomcat embutido e registra os servlets
-    │   ├── db/                  # ConnectionPool (pool + Proxy) e fachada
-    │   ├── model/               # Entidades e enums
-    │   ├── dao/                 # Acesso a dados
-    │   ├── services/            # Regras de negócio
-    │   ├── servlet/
-    │   │   ├── filter/          # AuthFilter (CORS + JWT) e registrar
-    │   │   ├── AuthServlet.java        # /api/auth/login | cadastrar | logout
-    │   │   ├── DashboardServlet.java   # GET /api/dashboard
-    │   │   └── ...                     # demais recursos da API
-    │   └── utils/
-    │       ├── DotEnv.java      # Leitor do .env (fonte de configuração local)
-    │       ├── JwtUtil.java     # Geração/validação de JWT (HS256)
-    │       ├── CorsConfig.java  # CORS configurável via CORS_ORIGIN
-    │       ├── Hasher.java      # PBKDF2-SHA256
-    │       └── JsonUtil.java    # Serialização/parsing JSON
-    └── webapp/css/style.css
+│       └── services/           # api.js (fetch + Bearer) + um serviço por recurso
+└── backend/                    # API REST Java (Jakarta Servlets + Tomcat embutido)
+    ├── Dockerfile              # Build multi-stage (compila e roda a API)
+    ├── .dockerignore
+    ├── docker-compose.yml      # Sobe PostgreSQL + API juntos
+    ├── .env / .env.example     # Configuração (lida por utils/DotEnv) — .env não versionado
+    ├── bruno/                  # Collection Bruno de testes da API (ver bruno/README.md)
+    ├── lib/                    # Dependências JAR
+    ├── sql/
+    │   └── database.sql        # DDL completo (carregado pelo Docker no 1º start)
+    └── src/main/
+        ├── java/
+        │   ├── Main.java            # Sobe o Tomcat embutido e registra os servlets
+        │   ├── db/                  # ConnectionPool (pool + Proxy) e fachada
+        │   ├── model/               # Entidades e enums
+        │   ├── dao/                 # Acesso a dados
+        │   ├── services/            # Regras de negócio
+        │   ├── servlet/
+        │   │   ├── filter/          # AuthFilter (CORS + JWT) e registrar
+        │   │   ├── AuthServlet.java        # /api/auth/login | cadastrar | logout
+        │   │   ├── DashboardServlet.java   # GET /api/dashboard
+        │   │   └── ...                     # demais recursos da API
+        │   └── utils/
+        │       ├── DotEnv.java      # Leitor do .env (fonte de configuração local)
+        │       ├── JwtUtil.java     # Geração/validação de JWT (HS256)
+        │       ├── CorsConfig.java  # CORS configurável via CORS_ORIGIN
+        │       ├── Hasher.java      # PBKDF2-SHA256
+        │       └── JsonUtil.java    # Serialização/parsing JSON
+        └── webapp/css/style.css
 ```
 
 ## Variáveis de ambiente
 
-Copie `.env.example` para `.env` (na raiz do projeto) e ajuste. A aplicação lê o
+Copie `backend/.env.example` para `backend/.env` e ajuste. A aplicação lê o
 `.env` automaticamente (via `utils.DotEnv`) — **não é preciso exportar variáveis no
 shell**. Uma variável de ambiente do processo, se definida, tem precedência sobre o
-`.env` (útil em produção/Docker).
+`.env` (é assim que o `docker-compose` injeta `DB_URL` apontando para o serviço `db`).
 
 | Variável | Uso | Padrão |
 |----------|-----|--------|
@@ -122,25 +130,36 @@ shell**. Uma variável de ambiente do processo, se definida, tem precedência so
 ## Como rodar
 
 ### Pré-requisitos
-- Java JDK 11+
-- Docker + Docker Compose (ou um PostgreSQL local)
+- Docker + Docker Compose (caminho recomendado — sobe banco e API juntos)
 - Node.js 18+ (para o front)
+- Java JDK 11+ (apenas se quiser rodar a API sem Docker)
 
-### 1. Banco de dados (Docker)
+### 1. Back-end (Docker — recomendado)
+
+Sobe **PostgreSQL + API** com um comando. Tudo a partir de `backend/`:
 
 ```bash
+cd backend
 cp .env.example .env      # ajuste as credenciais se quiser
-docker compose up -d      # sobe o PostgreSQL com o schema já criado
+docker compose up -d --build
 ```
 
-O banco fica disponível na porta definida em `.env` (`POSTGRES_PORT`, padrão `5432`),
-no db `devweb`. Para um PostgreSQL local em vez do Docker, crie o db, rode
-`sql/database.sql` e ajuste `DB_URL/DB_USER/DB_PASSWORD` no `.env`.
+- A API fica em `http://localhost:8080`; o banco na porta `POSTGRES_PORT` (padrão `5432`).
+- A API só inicia depois que o banco fica *healthy* (`depends_on: service_healthy`).
+- Dentro da rede do compose, a API alcança o banco pelo serviço `db` — o
+  `docker-compose` injeta `DB_URL=jdbc:postgresql://db:5432/...`, sobrepondo o `.env`.
+- O schema (`sql/database.sql`) é carregado no primeiro start (volume vazio).
 
-### 2. Back-end (API)
+Para parar: `docker compose down` (os dados persistem no volume `pgdata`).
+
+### 2. Back-end (sem Docker — alternativa)
+
+Requer JDK 11+ e um PostgreSQL acessível (suba só o banco com
+`docker compose up -d db` e ajuste `DB_URL` no `.env` para `localhost`).
+Rode **de dentro de `backend/`** (os caminhos são relativos):
 
 ```powershell
-# Compilar (caminhos relativos evitam problemas com espaços no caminho do projeto)
+cd backend
 New-Item -ItemType Directory -Force -Path "out\classes" | Out-Null
 $arquivos = Get-ChildItem -Recurse -Path "src\main\java" -Filter "*.java" | Resolve-Path -Relative
 [System.IO.File]::WriteAllLines("sources.txt", $arquivos)
@@ -157,14 +176,14 @@ A API sobe em `http://localhost:8080`.
 ```bash
 cd frontend
 npm install
-npm run dev               # Vite em http://localhost:5173 (proxy para a API)
+npm run dev               # Vite em http://localhost:5173 (proxy /api → :8080)
 ```
 
 ### 4. Testes de API (Bruno)
 
-Abra a pasta `bruno/` no [Bruno](https://www.usebruno.com/), selecione o ambiente
-**Local** e siga a ordem descrita em `bruno/README.md`. Cobre GET/POST/PUT/DELETE
-de todos os recursos, com o token e os IDs preenchidos automaticamente.
+Abra a pasta `backend/bruno/` no [Bruno](https://www.usebruno.com/), selecione o
+ambiente **Local** e siga a ordem descrita em `backend/bruno/README.md`. Cobre
+GET/POST/PUT/DELETE de todos os recursos, com o token e os IDs preenchidos automaticamente.
 
 ## Rotas da API
 
@@ -233,7 +252,7 @@ O status (`EM_USO`, `EM_ESTOQUE`, `DESCARTADO`, `ARQUIVADO`) é mantido pela tri
 
 ## Módulos desenvolvidos por Lucas Ardelino
 
-### Banco de Dados (`sql/database.sql`)
+### Banco de Dados (`backend/sql/database.sql`)
 Modelagem completa do banco: tabelas com herança (`pessoa → paciente/cuidador`), triggers de auditoria, views para consultas frequentes e índices de performance.
 
 ### Módulo de Vínculos (`frontend/src/`)

@@ -1,0 +1,10 @@
+# Artefatos de build/execução — recriados dentro do container.
+out/
+tomcat.8080/
+sources.txt
+
+# JARs de backup não usados no classpath (lib/* não inclui subpastas).
+lib/backup/
+
+# Configuração local: o container recebe tudo por variáveis de ambiente.
+.env

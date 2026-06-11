@@ -20,5 +20,23 @@ services:
       timeout: 5s
       retries: 10
 
+  api:
+    build: .
+    container_name: controle_medicamentos_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Dentro da rede do compose o banco é alcançado pelo nome do serviço (db),
+      # não por localhost. Env de processo tem precedência sobre o .env.
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-devweb}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-troque-por-um-segredo-forte}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+    ports:
+      - "8080:8080"
+
 volumes:
   pgdata:
