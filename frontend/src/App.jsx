@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import CadastroPage from './pages/CadastroPage'
 import DashboardPage from './pages/DashboardPage'
@@ -11,7 +11,7 @@ import VinculosPage from './pages/VinculosPage'
 
 export default function App() {
     return (
-        <BrowserRouter>
+        <HashRouter>
             <Routes>
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<LoginPage />} />
@@ -24,6 +24,6 @@ export default function App() {
                 <Route path="/historico" element={<HistoricoPage />} />
                 <Route path="/vinculos" element={<VinculosPage />} />
             </Routes>
-        </BrowserRouter>
+        </HashRouter>
     )
 }
