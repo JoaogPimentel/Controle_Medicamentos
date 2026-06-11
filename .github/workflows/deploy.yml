@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+# Necessário para o peaceiris/actions-gh-pages conseguir publicar a branch
+# gh-pages com o GITHUB_TOKEN (por padrão o token é somente-leitura).
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
